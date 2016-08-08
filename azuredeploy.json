@@ -576,7 +576,7 @@
                     "autoUpgradeMinorVersion": true,
                     "settings": {
                         "fileUris": [
-                            "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName')"
+                            "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                         ],
                         "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'))]"
                     }
@@ -698,7 +698,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "fileUris": [
-                                "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName')"
+                                "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
                             ],
                             "commandToExecute": "[concat('sh ', variables('setup_moodleScriptFileName'))]"
                         }
