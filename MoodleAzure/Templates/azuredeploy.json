@@ -1,0 +1,892 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Prefix of storage account name, each node lives in its own storage account"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "virtual network the nodes will be created in"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "ssh user name"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "ssh password"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS1",
+      "metadata": {
+        "description": "VM size for the nodes"
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "VM name prefix, a number will be appended for each node"
+      }
+    },
+    "moodleVersion": {
+      "type": "string",
+      "defaultValue": "MOODLE_31_STABLE",
+      "allowedValues": [
+        "MOODLE_31_STABLE",
+        "MOODLE_30_STABLE",
+        "MOODLE_29_STABLE"
+      ],
+      "metadata": {
+        "description": "The Moodle version you want to install."
+      }
+    },
+    "jboxpipDnsName": {
+      "type": "string",
+      "minLength": 3
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    },
+    "projectName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Name of this project"
+      }
+    }
+
+  },
+  "variables": {
+    "vnetPrefix": "172.18.0.0/16",
+    "SubnetWeb": "webtier",
+    "SubnetWebPrefix": "172.18.0.0/24",
+    "SubnetWebRef": "[concat(variables('vnetID'), '/subnets/', variables('SubnetWeb'))]",
+    "SubnetSan": "santier",
+    "SubnetSanPrefix": "172.18.1.0/24",
+    "GfsVmIPPrefix": "172.18.1.1",
+    "volumeName": "data",
+    "SubnetDb": "datatier",
+    "SubnetDbPrefix": "172.18.2.0/24",
+    "dbVmIPPrefix": "172.18.2.1",
+    "nicName": "vmssnic",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+    "webSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetWeb'))]",
+    "sanSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
+    "dbSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
+    "osImagePublisher": "Canonical",
+    "osImageOffer": "UbuntuServer",
+    "osImageSKU": "14.04.3-LTS",
+    "osImageVersion": "latest",
+    "GlusterSetupCmd": "bash azuregfs.sh",
+    "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
+    "scaleNumber": 2,
+    "SharedStorageAccountName": "[concat(parameters('storageAccountName'), uniqueString(resourceGroup().id))]",
+    "JumpVmOSDiskName": "JumpVmOSDisk",
+    "JumpVmVmSize": "Standard_D1",
+    "JumpVmStorageAccountContainerName": "vhds",
+    "jboxpipName": "jboxpip",
+    "diagnosticsStorageAccountName": "[variables('SharedStorageAccountName')]",
+    "diagnosticsStorageAccountResourceGroup": "[resourceGroup().name]",
+    "wadlogs": "<WadCfg><DiagnosticMonitorConfiguration>",
+    "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+    "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+    "wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
+    "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/','vmSS',parameters('vmNamePrefix'))]",
+    "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
+    "natPoolName": "natpool",
+    "bePoolName": "bePool",
+    "natStartPort": 50000,
+    "natEndPort": 50119,
+    "natBackendPort": 22,
+    "ilbNicName": "ilbNic",
+    "ipConfigName": "ipcfg_lb",
+    "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
+    "storageApiVersion": "2015-06-15",
+    "accountid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('diagnosticsStorageAccountResourceGroup'),'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]",
+    "osType": {
+      "publisher": "Canonical",
+      "offer": "UbuntuServer",
+      "sku": "14.04.3-LTS",
+      "version": "latest"
+    },
+    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webLbPip')]",
+    "install_moodleScriptFolder": "[concat(parameters('projectName'), '/', 'CustomScripts')]",
+    "install_moodleScriptFileName": "install_moodle.sh",
+    "setup_moodleScriptFolder": "[concat(parameters('projectName'), '/', 'CustomScripts')]",
+    "setup_moodleScriptFileName": "setup_moodle.sh"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(parameters('storageAccountName'), copyIndex())]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "GfsStorageAccount" },
+      "copy": {
+        "name": "gfs",
+        "count": "[variables('scaleNumber')]"
+      },
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "copy": {
+        "name": "vmss",
+        "count": 5
+      },
+      "location": "[resourceGroup().location]",
+      "name": "[concat('vmss',parameters('storageAccountName'), copyIndex())]",
+      "properties": {
+        "accountType": "Standard_LRS"
+      },
+      "tags": { "displayName": "VmssStorageAccount" },
+      "type": "Microsoft.Storage/storageAccounts"
+    },
+    {
+      "name": "[concat('db', parameters('storageAccountName'), copyIndex())]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "copy": {
+        "name": "db",
+        "count": "[variables('scaleNumber')]"
+      },
+      "tags": {
+        "displayName": "DatabaseStorageAccount"
+      },
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    },
+    {
+      "name": "[variables('SharedStorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "SharedStorageAccount"
+      },
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "name": "[parameters('virtualNetworkName')]",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "LmsVirtualNetwork"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('SubnetWeb')]",
+            "properties": {
+              "addressPrefix": "[variables('SubnetWebPrefix')]"
+            }
+          },
+          {
+            "name": "[variables('SubnetSan')]",
+            "properties": {
+              "addressPrefix": "[variables('SubnetSanPrefix')]"
+            }
+          },
+          {
+            "name": "[variables('SubnetDb')]",
+            "properties": {
+              "addressPrefix": "[variables('SubnetDbPrefix')]"
+            }
+          }
+
+        ]
+      }
+    },
+    {
+      "name": "[variables('jboxpipName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "jboxpip"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('jboxpipDnsName')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "jboxNsg",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow_SSH",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 1000,
+              "direction": "Inbound"
+            },
+            {
+              "name": "allow_http",
+              "properties": {
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "80",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 1005,
+                "direction": "Inbound"
+              }
+            }
+            ]
+          }
+
+      },
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat('gfsNic', copyindex())]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "GfsNic" },
+      "copy": {
+        "name": "gfs",
+        "count": "[variables('scaleNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipcfg_gfs",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(variables('GfsVmIPPrefix'), copyindex())]",
+              "subnet": {
+                "id": "[variables('sanSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat('dbNic', copyindex())]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "dbNic" },
+      "copy": {
+        "name": "db",
+        "count": "[variables('scaleNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipcfg_db",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat(variables('dbVmIPPrefix'), copyindex())]",
+              "subnet": {
+                "id": "[variables('dbSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "jboxNic",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('jboxpipName'))]"
+      ],
+      "tags": {
+        "displayName": "jboxNic"
+      },
+
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipcfgjbox",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('SubnetWebRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('jboxpipName'))]"
+              }
+            },
+            "networkSecurityGroup": {
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'jboxNsg')]"
+            }
+
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "webLbPip",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "dnsSettings": {
+          "domainNameLabel": "[tolower(concat('lb-',parameters('vmNamePrefix')))]"
+        },
+        "publicIPAllocationMethod": "Dynamic",
+        "tags": { "displayName": "webLbPip" }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "GfsVms" },
+      "copy": {
+        "name": "gfs",
+        "count": "[variables('scaleNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', 'gfsNic', copyindex())]",
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/','GfsAvSet')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[concat('gfs',parameters('vmNamePrefix'), copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets','GfsAvSet')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('osImagePublisher')]",
+            "offer": "[variables('osImageOffer')]",
+            "sku": "[variables('osImageSKU')]",
+            "version": "[variables('osImageVersion')]"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('storageAccountName'), copyindex(), '.blob.core.windows.net/vhds/','gfs' ,parameters('vmNamePrefix'), copyIndex(), 'osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "500",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/gfs', parameters('vmNamePrefix'), copyIndex(), 'datadisk1.vhd')]"
+              },
+              "createOption": "Empty"
+            },
+            {
+              "name": "datadisk2",
+              "diskSizeGB": "500",
+              "lun": 1,
+              "vhd": {
+                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/gfs', parameters('vmNamePrefix'), copyIndex(), 'datadisk2.vhd')]"
+              },
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('gfsNic', copyindex()))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat('db',parameters('vmNamePrefix'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "dbVms" },
+      "copy": {
+        "name": "db",
+        "count": "[variables('scaleNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', 'dbNic', copyindex())]",
+        "[concat('Microsoft.Storage/storageAccounts/', 'db', parameters('storageAccountName'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/', 'dbAvSet')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets','dbAvSet')]"
+        },
+        "osProfile": {
+          "computerName": "[concat('db',parameters('vmNamePrefix'), copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('osImagePublisher')]",
+            "offer": "[variables('osImageOffer')]",
+            "sku": "[variables('osImageSKU')]",
+            "version": "[variables('osImageVersion')]"
+          },
+          "osDisk": {
+            "name": "osdisk",
+            "vhd": {
+              "uri": "[concat('http://',parameters('storageAccountName'), copyindex(), '.blob.core.windows.net/vhds/', 'db',parameters('vmNamePrefix'), copyIndex(), 'osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "500",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', parameters('vmNamePrefix'), copyIndex(), 'datadisk1.vhd')]"
+              },
+              "createOption": "Empty"
+            },
+            {
+              "name": "datadisk2",
+              "diskSizeGB": "500",
+              "lun": 1,
+              "vhd": {
+                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', parameters('vmNamePrefix'), copyIndex(), 'datadisk2.vhd')]"
+              },
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('dbNic', copyindex()))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "[concat('jbox-',parameters('vmNamePrefix'))]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('SharedStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', 'jboxNic')]"
+      ],
+      "tags": {
+        "displayName": "JumpVm"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('JumpVmVmSize')]"
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'jboxNic')]"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[concat('jbox-',parameters('vmNamePrefix'))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('osImagePublisher')]",
+            "offer": "[variables('osImageOffer')]",
+            "sku": "[variables('osImageSKU')]",
+            "version": "[variables('osImageVersion')]"
+          },
+          "osDisk": {
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "name": "JumpVmOSDisk",
+            "vhd": {
+              "uri": "[concat('http://', variables('SharedStorageAccountName'), '.blob.core.windows.net/vhds/jbox', parameters('vmNamePrefix'), '-osdisk.vhd')]"
+            }
+          }
+        }
+      },
+        "resources": [
+            {
+                "name": "install_moodle",
+                "type": "extensions",
+                "location": "[resourceGroup().location]",
+                "apiVersion": "2015-06-15",
+                "dependsOn": [
+                    "[concat('Microsoft.Compute/virtualMachines/', concat('jbox-',parameters('vmNamePrefix')))]"
+                ],
+                "tags": {
+                    "displayName": "install_moodle"
+                },
+                "properties": {
+                    "publisher": "Microsoft.OSTCExtensions",
+                    "type": "CustomScriptForLinux",
+                    "typeHandlerVersion": "1.4",
+                    "autoUpgradeMinorVersion": true,
+                    "settings": {
+                        "fileUris": [
+                            "[concat(parameters('_artifactsLocation'), '/', variables('install_moodleScriptFolder'), '/', variables('install_moodleScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+                        ],
+                        "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'))]"
+                    }
+                }
+            }
+            
+        ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "webVmSS",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '0')]",
+        "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '1')]",
+        "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '2')]",
+        "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '3')]",
+        "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '4')]",
+        "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+      ],
+      "tags": {
+        "displayName": "webVmSS"
+      },
+
+      "sku": {
+        "capacity": 10,
+        "name": "Standard_D2",
+        "tier": "Standard"
+      },
+      "properties": {
+        "overprovision": "true",
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "vhdContainers": [
+                "[concat('https://', 'vmss', parameters('storageAccountName'), '0.blob.core.windows.net/vhds0')]",
+                "[concat('https://', 'vmss', parameters('storageAccountName'), '1.blob.core.windows.net/vhds1')]",
+                "[concat('https://', 'vmss', parameters('storageAccountName'), '2.blob.core.windows.net/vhds2')]",
+                "[concat('https://', 'vmss', parameters('storageAccountName'), '3.blob.core.windows.net/vhds3')]",
+                "[concat('https://', 'vmss', parameters('storageAccountName'), '4.blob.core.windows.net/vhds4')]"
+              ],
+              "name": "osdisk",
+              "caching": "ReadOnly",
+              "createOption": "FromImage"
+            },
+            "imageReference": {
+              "offer": "[variables('osImageOffer')]",
+              "publisher": "[variables('osImagePublisher')]",
+              "sku": "[variables('osImageSKU')]",
+              "version": "[variables('osImageVersion')]"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[concat('web',parameters('vmNamePrefix'))]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[variables('nicName')]",
+                "properties": {
+                  "ipConfigurations": [
+                    {
+                      "name": "[variables('ipConfigName')]",
+                      "properties": {
+                        "subnet": {
+                          "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', variables('subnetWeb'))]"
+                        },
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/backendAddressPools/', variables('bePoolName'))]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": [
+                          {
+                            "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/inboundNatPools/', variables('natPoolName'))]"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "primary": "true"
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "LinuxDiagnostic",
+                "properties": {
+                  "publisher": "Microsoft.OSTCExtensions",
+                  "type": "LinuxDiagnostic",
+                  "typeHandlerVersion": "2.3",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "xmlCfg": "[base64(concat(variables('wadcfgxstart'),variables('wadmetricsresourceid'),variables('wadcfgxend')))]",
+                    "storageAccount": "[variables('diagnosticsStorageAccountName')]"
+                  },
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('diagnosticsStorageAccountName')]",
+                    "storageAccountKey": "[listkeys(variables('accountid'), variables('storageApiVersion')).key1]",
+                    "storageAccountEndPoint": "https://core.windows.net"
+                  }
+                }
+              },
+                {
+                    "name": "setup_moodle",
+                    "properties": {
+                        "publisher": "Microsoft.OSTCExtensions",
+                        "type": "CustomScriptForLinux",
+                        "typeHandlerVersion": "1.4",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[concat(parameters('_artifactsLocation'), '/', variables('setup_moodleScriptFolder'), '/', variables('setup_moodleScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+                            ],
+                            "commandToExecute": "[concat('sh ', variables('setup_moodleScriptFileName'))]"
+                        }
+                    }
+                }
+             ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex(), '/extension')]",
+      "apiVersion": "2015-05-01-preview",
+      "tags": { "displayName": "GfsVmExtension" },
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "gfs",
+        "count": "[variables('scaleNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/gfs', parameters('vmNamePrefix'), copyindex())]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "CustomScriptForLinux",
+        "typeHandlerVersion": "1.3",
+        "settings": {
+          "fileUris": [
+            "[variables('customScriptFilePath')]"
+          ],
+          "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', parameters('vmNamePrefix'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('scaleNumber'))]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "name": "lbWeb",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/','webLbPip')]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "properties": {
+              "publicIPAddress": {
+                "id": "[variables('publicIPAddressID')]"
+              }
+            },
+            "name": "LoadBalancerFrontend"
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('bePoolName')]"
+          }
+        ],
+        "inboundNatPools": [
+          {
+            "name": "[variables('natPoolName')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('frontEndIPConfigID')]"
+              },
+              "protocol": "tcp",
+              "frontendPortRangeStart": "[variables('natStartPort')]",
+              "frontendPortRangeEnd": "[variables('natEndPort')]",
+              "backendPort": "[variables('natBackendPort')]"
+            }
+          }
+        ]
+      },
+      "type": "Microsoft.Network/loadBalancers"
+    },
+    {
+      "name": "GfsAvSet",
+      "type": "Microsoft.Compute/availabilitySets",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "GfsAvSet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      }
+    },
+    {
+      "name": "dbAvSet",
+      "type": "Microsoft.Compute/availabilitySets",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "dbAvSet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      }
+    },
+    {
+      "type": "Microsoft.Insights/autoscaleSettings",
+      "apiVersion": "2015-04-01",
+      "name": "autoscalewad",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Compute/virtualMachineScaleSets/webVMSS"
+      ],
+      "properties": {
+        "name": "autoscalewad",
+        "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webVmSS')]",
+        "enabled": true,
+        "profiles": [
+          {
+            "name": "Profile1",
+            "capacity": {
+              "minimum": "2",
+              "maximum": "10",
+              "default": "2"
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "\\Processor\\PercentProcessorTime",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','vmSS',parameters('vmNamePrefix'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 80.0
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT1M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "\\Processor\\PercentProcessorTime",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'vmSS',parameters('vmNamePrefix'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT5M",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 50.0
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": "1",
+                  "cooldown": "PT5M"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+  ]
+} 
