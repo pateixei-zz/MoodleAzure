@@ -54,5 +54,13 @@ mkdir /moodle/moodledata
 chown www-data /moodle/moodledata
 chmod 770 /moodle/moodledata
 
+# updapte Apache configuration
+cp /etc/apache2/apache2.conf apache2.conf.bak
+sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
+
+#update virtual site configuration 
+sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites.enabled/000-default.conf
+
 # restart Apache
-apachectl restart
+service apache2 restart 
+
