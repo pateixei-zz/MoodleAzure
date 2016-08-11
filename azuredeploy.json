@@ -570,6 +570,8 @@
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0']",
+                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0'/extensions/setupGluster')]",                
                 "[concat('Microsoft.Storage/storageAccounts/', variables('SharedStorageAccountName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', 'jboxNic')]"
             ],
@@ -647,6 +649,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '2')]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '3')]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '4')]",
+                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0'/extensions/setupGluster')]",                
                 "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
                 "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
             ],
@@ -761,7 +764,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex(), '/extension')]",
+            "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex(), '/setupGluster')]",
             "apiVersion": "2015-05-01-preview",
             "tags": {
                 "displayName": "GfsVmExtension"
