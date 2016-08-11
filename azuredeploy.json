@@ -54,6 +54,18 @@
         "jboxpipDnsName": {
             "type": "string",
             "minLength": 3
+        },
+        "mySQLuserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "my sql regular user password"
+            }
+        },
+        "mySQLrootPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "my sql root user password"
+            }
         }
     },
     "variables": {
@@ -113,7 +125,11 @@
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webLbPip')]",
         "moodleScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
         "install_moodleScriptFileName": "install_moodle.sh",
-        "setup_moodleScriptFileName": "setup_moodle.sh"
+        "setup_moodleScriptFileName": "setup_moodle.sh",
+        "mariadbScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
+        "install_mariadbScriptFileName": "install_mariadb.sh",
+        "nodeDBCount" : 2,
+        "subnetIPBase": "172.18.2."
     },
     "resources": [
         {
@@ -133,6 +149,7 @@
             }
         },
         {
+            "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2015-05-01-preview",
             "copy": {
                 "name": "vmss",
@@ -145,12 +162,11 @@
             },
             "tags": {
                 "displayName": "VmssStorageAccount"
-            },
-            "type": "Microsoft.Storage/storageAccounts"
+            }
         },
         {
-            "name": "[concat('db', parameters('storageAccountName'), copyIndex())]",
             "type": "Microsoft.Storage/storageAccounts",
+            "name": "[concat('db', parameters('storageAccountName'), copyIndex())]",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [],
@@ -520,7 +536,33 @@
                         }
                     ]
                 }
-            }
+            },
+            "resources": [
+                {
+                    "name": "install_mariadb",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2015-06-15",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/','db',parameters('vmNamePrefix'),copyIndex())]"
+                    ],
+                    "tags": {
+                        "displayName": "install_mariadb"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.OSTCExtensions",
+                        "type": "CustomScriptForLinux",
+                        "typeHandlerVersion": "1.4",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[concat(variables('mariadbScriptLocation'),variables('install_mariadbScriptFileName'))]"
+                            ],
+                            "commandToExecute": "[concat('bash ', variables('install_mariadbScriptFileName'),' ', variables('nodeDBCount'), ' ', parameters('mySQLrootPassword'),' ',variables('subnetIPBase'), ' ', parameters('mySQLuserPassword'))]"
+                        }
+                    }
+                }
+            ]            
         },
         {
             "name": "[concat('jbox-',parameters('vmNamePrefix'))]",
@@ -588,7 +630,7 @@
                             "fileUris": [
                                 "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                             ],
-                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'))]"
+                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',parameters('vmNamePrefix'),'0', ' ',variables('volumeName') )]"
                         }
                     }
                 }
@@ -708,7 +750,7 @@
                                         "fileUris": [
                                             "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
                                         ],
-                                        "commandToExecute": "[concat('sh ', variables('setup_moodleScriptFileName'))]"
+                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',parameters('vmNamePrefix'),'0', ' ',variables('volumeName') )]"
                                     }
                                 }
                             }
