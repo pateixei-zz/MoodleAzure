@@ -26,14 +26,21 @@ moodleVersion=$1
 glusterNode=$2
 glusterVolume=$3 
 
+cd ~
+
+install_gluster
+
+apt-get update > /dev/null
+apt-get install -f -y > /dev/null
+
 # install pre-requisites
-apt-get -y install python-software-properties unzip
+apt-get install -y --fix-missing python-software-properties unzip
 
 # install the LAMP stack
-apt-get -y install apache2 mysql-client php5
+apt-get install -y apache2 mysql-client php5
 
 # install moodle requirements
-apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
+apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
 
 # install Moodle
 cd /moodle/html
@@ -67,6 +74,24 @@ crontab cronjob
 # restart Apache
 apachectl restart
 
+
+function install_gluster
+{
+        #configure gluster repository & install gluster client
+        add-apt-repository ppa:gluster/glusterfs-3.7 -y
+        apt-get -y update
+        apt-get -y install glusterfs-client mysql-client git 
+
+        # create gluster mount point
+        mkdir -p /moodle
+        
+        # mount gluster files system
+        mount -t glusterfs $glusterNode:/$glusterVolume /moodle
+
+        #create html directory for storing moodle files
+        mkdir /moodle/html
+    
+}
 
 function install_nginx
 {
@@ -220,22 +245,4 @@ function install_nginx
 
         service php5-fpm restart
         service nginx restart    
-}
-
-function install_gluster
-{
-        #configure gluster repository & install gluster client
-        add-apt-repository ppa:gluster/glusterfs-3.7 -y
-        apt-get -y update
-        apt-get -y install glusterfs-client mysql-client git 
-
-        # create gluster mount point
-        mkdir -p /moodle
-        
-        # mount gluster files system
-        mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-
-        #create html directory for storing moodle files
-        mkdir /moodle/html
-    
 }

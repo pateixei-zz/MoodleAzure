@@ -87,7 +87,7 @@
         "dbSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
         "osImagePublisher": "Canonical",
         "osImageOffer": "UbuntuServer",
-        "osImageSKU": "14.04.3-LTS",
+        "osImageSKU": "14.04.4-LTS",
         "osImageVersion": "latest",
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
@@ -119,7 +119,7 @@
         "osType": {
             "publisher": "Canonical",
             "offer": "UbuntuServer",
-            "sku": "14.04.3-LTS",
+            "sku": "14.04.4-LTS",
             "version": "latest"
         },
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webLbPip')]",
@@ -565,13 +565,13 @@
             ]            
         },
         {
-            "name": "[concat('jbox-',parameters('vmNamePrefix'))]",
+            "name": "[concat('jbox',parameters('vmNamePrefix'))]",
             "type": "Microsoft.Compute/virtualMachines",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0']",
-                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0'/extensions/setupGluster')]",                
+                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0')]",
+                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0/extensions/setupGluster')]",                
                 "[concat('Microsoft.Storage/storageAccounts/', variables('SharedStorageAccountName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', 'jboxNic')]"
             ],
@@ -590,7 +590,7 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[concat('jbox-',parameters('vmNamePrefix'))]",
+                    "computerName": "[concat('jbox',parameters('vmNamePrefix'))]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -618,7 +618,7 @@
                     "location": "[resourceGroup().location]",
                     "apiVersion": "2015-06-15",
                     "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/', concat('jbox-',parameters('vmNamePrefix')))]"
+                        "[concat('Microsoft.Compute/virtualMachines/', concat('jbox',parameters('vmNamePrefix')))]"
                     ],
                     "tags": {
                         "displayName": "install_moodle"
@@ -649,7 +649,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '2')]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '3')]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '4')]",
-                "[concat('Microsoft.Compute/virtualMachines/','gfs',parameters('vmNamePrefix'),'0'/extensions/setupGluster')]",                
+                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0/extensions/setupGluster')]",                
                 "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
                 "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
             ],
@@ -680,12 +680,12 @@
                             "caching": "ReadOnly",
                             "createOption": "FromImage"
                         },
-                        "imageReference": {
-                            "offer": "[variables('osImageOffer')]",
-                            "publisher": "[variables('osImagePublisher')]",
-                            "sku": "[variables('osImageSKU')]",
-                            "version": "[variables('osImageVersion')]"
-                        }
+                    "imageReference": {
+                        "publisher": "[variables('osImagePublisher')]",
+                        "offer": "[variables('osImageOffer')]",
+                        "sku": "[variables('osImageSKU')]",
+                        "version": "[variables('osImageVersion')]"
+                    }
                     },
                     "osProfile": {
                         "computerNamePrefix": "[concat('web',parameters('vmNamePrefix'))]",
@@ -867,7 +867,7 @@
             ],
             "properties": {
                 "name": "autoscalewad",
-                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webVmSS')]",
+                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webVmSS',parameters('vmNamePrefix'))]",
                 "enabled": true,
                 "profiles": [
                     {
@@ -875,14 +875,14 @@
                         "capacity": {
                             "minimum": "2",
                             "maximum": "10",
-                            "default": "2"
+                            "default": "4"
                         },
                         "rules": [
                             {
                                 "metricTrigger": {
                                     "metricName": "\\Processor\\PercentProcessorTime",
                                     "metricNamespace": "",
-                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','vmSS',parameters('vmNamePrefix'))]",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','webVmSS',parameters('vmNamePrefix'))]",
                                     "timeGrain": "PT1M",
                                     "statistic": "Average",
                                     "timeWindow": "PT5M",
