@@ -20,6 +20,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
+function install_gluster
+{
+        #configure gluster repository & install gluster client
+        add-apt-repository ppa:gluster/glusterfs-3.7 -y
+        apt-get -y update
+        apt-get -y install glusterfs-client mysql-client git 
+
+        # create gluster mount point
+        mkdir -p /moodle
+        
+        # mount gluster files system
+        mount -t glusterfs $glusterNode:/$glusterVolume /moodle
+
+        #create html directory for storing moodle files
+        mkdir /moodle/html
+    
+}
+
+
 #parameters 
 
 moodleVersion=$1
@@ -73,25 +93,6 @@ crontab cronjob
 
 # restart Apache
 apachectl restart
-
-
-function install_gluster
-{
-        #configure gluster repository & install gluster client
-        add-apt-repository ppa:gluster/glusterfs-3.7 -y
-        apt-get -y update
-        apt-get -y install glusterfs-client mysql-client git 
-
-        # create gluster mount point
-        mkdir -p /moodle
-        
-        # mount gluster files system
-        mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-
-        #create html directory for storing moodle files
-        mkdir /moodle/html
-    
-}
 
 function install_nginx
 {
