@@ -74,7 +74,7 @@ mv moodle-$moodleVersion moodle
 cd /moodle/html
 curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
 unzip o365.zip
-cp -r o365-moodle-$moodleVersion/* moodle
+cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
 rm -rf o365-moodle-$moodleVersion
 #fi
 
