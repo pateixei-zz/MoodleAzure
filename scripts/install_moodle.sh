@@ -71,6 +71,7 @@ mv moodle-$moodleVersion moodle
 # install Office 365 plugins
 
 #if [ "$installOfficePlugins" = "True" ]; then
+cd /moodle/html
 curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
 unzip o365.zip
 cp -r o365-moodle-$moodleVersion/* moodle
