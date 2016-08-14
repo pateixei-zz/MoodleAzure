@@ -62,12 +62,6 @@ apt-get install -y apache2 mysql-client php5
 # install moodle requirements
 apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
 
-# install Moodle
-cd /moodle/html
-curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/$moodleVersion.zip -L -o moodle.zip
-unzip moodle.zip
-mv moodle-$moodleVersion moodle
-
 # install Office 365 plugins
 
 #if [ "$installOfficePlugins" = "True" ]; then
@@ -77,6 +71,12 @@ unzip o365.zip
 cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
 rm -rf o365-moodle-$moodleVersion
 #fi
+
+# install Moodle
+cd /moodle/html
+curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/$moodleVersion.zip -L -o moodle.zip
+unzip moodle.zip
+mv moodle-$moodleVersion moodle
 
 # make the moodle directory writable for owner
 chown -R www-data moodle
