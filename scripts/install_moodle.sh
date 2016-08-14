@@ -75,15 +75,15 @@ mv moodle-$moodleVersion moodle
 chown -R www-data moodle
 chmod -R 770 moodle
 #if [ "$installOfficePlugins" = "True" ]; then
-cd ~
+
 curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
 unzip o365.zip
 cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
 rm -rf o365-moodle-$moodleVersion
 #fi
-' > ~/setup-moodle.sh 
-chmod +x ~/setup-mooodle.sh
-~/setup-moodle.sh & 
+' > /var/tmp/setup-moodle.sh 
+chmod +x /var/tmp/setup-mooodle.sh
+/var/tmp/setup-moodle.sh & 
 
 
 # create moodledata directory
