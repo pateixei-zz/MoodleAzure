@@ -64,6 +64,16 @@ apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd p
 
 # install Office 365 plugins
 
+
+# install Moodle 
+echo -e '
+cd /moodle/html
+curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/$moodleVersion.zip -L -o moodle.zip
+unzip moodle.zip
+mv moodle-$moodleVersion moodle
+# make the moodle directory writable for owner
+chown -R www-data moodle
+chmod -R 770 moodle
 #if [ "$installOfficePlugins" = "True" ]; then
 cd ~
 curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
@@ -71,16 +81,10 @@ unzip o365.zip
 cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
 rm -rf o365-moodle-$moodleVersion
 #fi
+' > ~/setup-moodle.sh 
+chmod +x ~/setup-mooodle.sh
+~/setup-moodle.sh & 
 
-# install Moodle
-cd /moodle/html
-curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/$moodleVersion.zip -L -o moodle.zip
-unzip moodle.zip
-mv moodle-$moodleVersion moodle
-
-# make the moodle directory writable for owner
-chown -R www-data moodle
-chmod -R 770 moodle
 
 # create moodledata directory
 mkdir /moodle/moodledata
