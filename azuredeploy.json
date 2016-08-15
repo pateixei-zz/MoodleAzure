@@ -98,7 +98,7 @@
         "natStartPort": 50000,
         "natEndPort": 50119,
         "natBackendPort": 22,
-        "ilbNicName": "ilbNic",
+        "ilbNicName": "ilbnic",
         "ipConfigName": "ipcfg_lb",
         "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
         "storageApiVersion": "2015-06-15",
@@ -273,7 +273,7 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('gfsNic', copyindex())]",
+            "name": "[concat('gfsnic', copyindex())]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "GfsNic"
@@ -303,7 +303,7 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('dbNic', copyindex())]",
+            "name": "[concat('dbnic', copyindex())]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "dbNic"
@@ -331,7 +331,7 @@
             }
         },
         {
-            "name": "jboxNic",
+            "name": "jboxnic",
             "type": "Microsoft.Network/networkInterfaces",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
@@ -390,7 +390,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'gfsNic', copyindex())]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'gfsnic', copyindex())]",
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAcctName'), copyindex())]",
                 "[concat('Microsoft.Compute/availabilitySets/','GfsAvSet')]"
             ],
@@ -464,7 +464,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'dbNic', copyindex())]",
+                "[concat('Microsoft.Network/networkInterfaces/', 'dbnic', copyindex())]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'db', variables('storageAcctName'), copyindex())]",
                 "[concat('Microsoft.Compute/availabilitySets/', 'dbAvSet')]"
             ],
@@ -560,7 +560,7 @@
                 "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0')]",
                 "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0/extensions/setupGluster')]",                
                 "[concat('Microsoft.Storage/storageAccounts/', variables('SharedStorageAccountName'))]",
-                "[concat('Microsoft.Network/networkInterfaces/', 'jboxNic')]"
+                "[concat('Microsoft.Network/networkInterfaces/', 'jboxnic')]"
             ],
             "tags": {
                 "displayName": "JumpVm"
