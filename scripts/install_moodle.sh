@@ -20,24 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-
-function install_gluster
-{
-        #configure gluster repository & install gluster client
-        add-apt-repository ppa:gluster/glusterfs-3.7 -y
-        apt-get -y update
-        apt-get -y install glusterfs-client mysql-client git 
-        
-        # mount gluster files system
-        echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
-        mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-
-        #create html directory for storing moodle files
-        mkdir /moodle/html
-    
-}
-
-
 #parameters 
 
 moodleVersion=$1
@@ -47,9 +29,17 @@ glusterVolume=$3
 # create gluster mount point
 mkdir -p /moodle
 
-#configure gluster client
-install_gluster
+#configure gluster repository & install gluster client
+add-apt-repository ppa:gluster/glusterfs-3.7 -y
+apt-get -y update
+apt-get -y install glusterfs-client mysql-client git 
 
+# mount gluster files system
+echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
+mount -t glusterfs $glusterNode:/$glusterVolume /moodle
+
+#create html directory for storing moodle files
+mkdir /moodle/html
 # install pre-requisites
 apt-get install -y --fix-missing python-software-properties unzip
 
