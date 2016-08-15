@@ -79,7 +79,7 @@ chmod -R 770 moodle
         cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
         rm -rf o365-moodle-'$moodleVersion'
 #fi
-' >> /moodle/setup-moodle.sh 
+' > /moodle/setup-moodle.sh 
 chmod +x /moodle/setup-mooodle.sh
 /moodle/setup-moodle.sh & 
 
