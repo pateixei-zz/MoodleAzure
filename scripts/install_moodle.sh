@@ -61,7 +61,7 @@ apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd p
 
 
 # install Moodle 
-echo -e '#!/bin/bash
+echo '#!/bin/bash
 mkdir /moodle/html
 cd /moodle/html
 
@@ -98,6 +98,7 @@ crontab cronjob
 # updapte Apache configuration
 cp /etc/apache2/apache2.conf apache2.conf.bak
 sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
+echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #update virtual site configuration 
 sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled/000-default.conf

@@ -109,7 +109,7 @@
             "sku": "14.04.4-LTS",
             "version": "latest"
         },
-        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webLbPip')]",
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webpip')]",
         "moodleScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
         "install_moodleScriptFileName": "install_moodle.sh",
         "setup_moodleScriptFileName": "setup_moodle.sh",
@@ -364,7 +364,7 @@
         },
         {
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "webLbPip",
+            "name": "webpip",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "properties": {
@@ -373,7 +373,7 @@
                 },
                 "publicIPAllocationMethod": "Dynamic",
                 "tags": {
-                    "displayName": "webLbPip"
+                    "displayName": "webpip"
                 }
             }
         },
@@ -782,7 +782,7 @@
             "location": "[resourceGroup().location]",
             "name": "lbWeb",
             "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/','webLbPip')]"
+                "[concat('Microsoft.Network/publicIPAddresses/','webpip')]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
