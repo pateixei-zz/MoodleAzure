@@ -43,7 +43,7 @@ apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-
 mkdir -p /moodle
  
 # mount gluster files system
-mount -t glusterfs $GLUSTER_FIRST_NODE_NAME:/$GLUSTER_VOLUME_NAME /moodle
+mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 # make the moodle directory writable for owner
 chown www-data moodle
@@ -57,6 +57,7 @@ chmod 770 /moodle/moodledata
 # updapte Apache configuration
 cp /etc/apache2/apache2.conf apache2.conf.bak
 sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
+echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #update virtual site configuration 
 sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled/000-default.conf

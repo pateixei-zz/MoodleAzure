@@ -627,7 +627,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachineScaleSets",
-            "name": "webVmSS",
+            "name": "webfarm",
             "location": "[resourceGroup().location]",
             "apiVersion": "2016-03-30",
             "dependsOn": [
@@ -641,7 +641,7 @@
                 "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
             "tags": {
-                "displayName": "webVmSS"
+                "displayName": "webfarm"
             },
             "sku": {
                 "capacity": 10,
@@ -850,11 +850,11 @@
             "name": "autoscalewad",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "Microsoft.Compute/virtualMachineScaleSets/webVMSS"
+                "Microsoft.Compute/virtualMachineScaleSets/webfarm"
             ],
             "properties": {
                 "name": "autoscalewad",
-                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webVmSS')]",
+                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webfarm')]",
                 "enabled": true,
                 "profiles": [
                     {
@@ -869,7 +869,7 @@
                                 "metricTrigger": {
                                     "metricName": "\\Processor\\PercentProcessorTime",
                                     "metricNamespace": "",
-                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','webVmSS')]",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','webfarm')]",
                                     "timeGrain": "PT1M",
                                     "statistic": "Average",
                                     "timeWindow": "PT5M",
@@ -888,7 +888,7 @@
                                 "metricTrigger": {
                                     "metricName": "\\Processor\\PercentProcessorTime",
                                     "metricNamespace": "",
-                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webVmSS')]",
+                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webfarm')]",
                                     "timeGrain": "PT1M",
                                     "statistic": "Average",
                                     "timeWindow": "PT5M",
