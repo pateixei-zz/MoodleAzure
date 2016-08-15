@@ -54,7 +54,7 @@
     },
     "variables": {
         "storageAcctName": "[concat(parameters('resourcesPrefix'),'sa')]",
-        "jBoxPipName" : "[concat('jb-',parameters('resourcesPrefix'))]",
+        "jboxpipName" : "[concat('jb-',parameters('resourcesPrefix'))]",
         "vnetName": "[concat(parameters('resourcesPrefix'),'vnet')]",
         "vmName": "[concat(parameters('resourcesPrefix'),'vm')]",
         "vnetPrefix": "172.18.0.0/16",
@@ -84,7 +84,6 @@
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
         "JumpVmStorageAccountContainerName": "vhds",
-        "jboxpipName": "jboxpip",
         "diagnosticsStorageAccountName": "[variables('SharedStorageAccountName')]",
         "diagnosticsStorageAccountResourceGroup": "[resourceGroup().name]",
         "wadlogs": "<WadCfg><DiagnosticMonitorConfiguration>",
