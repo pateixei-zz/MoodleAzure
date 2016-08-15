@@ -50,8 +50,6 @@ mkdir -p /moodle
 install_gluster
 
 # install pre-requisites
-apt-get update > /dev/null
-apt-get install -f -y > /dev/null
 apt-get install -y --fix-missing python-software-properties unzip
 
 # install the LAMP stack
@@ -65,9 +63,12 @@ apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd p
 echo -e '#!/bin/bash
 mkdir /moodle/html
 cd /moodle/html
+
+# downloading moodle 
 curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
 unzip moodle.zip
 mv moodle-'$moodleVersion' moodle
+
 # make the moodle directory writable for owner
 chown -R www-data moodle
 chmod -R 770 moodle
@@ -80,9 +81,8 @@ chmod -R 770 moodle
         rm -rf o365-moodle-'$moodleVersion'
 #fi
 ' > /moodle/setup-moodle.sh 
-chmod +x /moodle/setup-mooodle.sh
-/moodle/setup-moodle.sh & 
-
+chmod +x /moodle/setup-moodle.sh
+/moodle/setup-moodle.sh 
 
 # create moodledata directory
 mkdir /moodle/moodledata
