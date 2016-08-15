@@ -29,6 +29,7 @@ function install_gluster
         apt-get -y install glusterfs-client mysql-client git 
         
         # mount gluster files system
+        echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
         mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
         #create html directory for storing moodle files
