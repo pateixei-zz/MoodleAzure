@@ -53,16 +53,16 @@ apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd p
 # install Moodle 
 echo '#!/bin/bash
 mkdir /moodle/html
-cd /moodle/html
+cd /tmp
 
 # downloading moodle 
 curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
 unzip moodle.zip
-mv moodle-'$moodleVersion' moodle
+mv moodle-'$moodleVersion' /moodle/html/moodle
 
 # make the moodle directory writable for owner
-chown -R www-data moodle
-chmod -R 770 moodle
+chown -R www-data /moodle/html/moodle
+chmod -R 770 /moodle/html/moodle
 
 # install Office 365 plugins
 #if [ "$installOfficePlugins" = "True" ]; then
@@ -71,14 +71,14 @@ chmod -R 770 moodle
         cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
         rm -rf o365-moodle-'$moodleVersion'
 #fi
-' > /moodle/setup-moodle.sh 
-chmod +x /moodle/setup-moodle.sh
-/moodle/setup-moodle.sh 
-
 # create moodledata directory
 mkdir /moodle/moodledata
 chown -R www-data /moodle/moodledata
 chmod -R 770 /moodle/moodledata
+' > /tmp/setup-moodle.sh 
+chmod +x /tmp/setup-moodle.sh
+/tmp/setup-moodle.sh 
+
 
 # create cron entry
 # It is scheduled for once per day. It can be changed as needed.
