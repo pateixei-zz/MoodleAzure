@@ -27,9 +27,6 @@ function install_gluster
         add-apt-repository ppa:gluster/glusterfs-3.7 -y
         apt-get -y update
         apt-get -y install glusterfs-client mysql-client git 
-
-        # create gluster mount point
-        mkdir -p /moodle
         
         # mount gluster files system
         mount -t glusterfs $glusterNode:/$glusterVolume /moodle
@@ -46,14 +43,15 @@ moodleVersion=$1
 glusterNode=$2
 glusterVolume=$3 
 
-cd ~
+# create gluster mount point
+mkdir -p /moodle
 
+#configure gluster client
 install_gluster
 
+# install pre-requisites
 apt-get update > /dev/null
 apt-get install -f -y > /dev/null
-
-# install pre-requisites
 apt-get install -y --fix-missing python-software-properties unzip
 
 # install the LAMP stack
@@ -61,8 +59,6 @@ apt-get install -y apache2 mysql-client php5
 
 # install moodle requirements
 apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
-
-# install Office 365 plugins
 
 
 # install Moodle 
@@ -74,16 +70,17 @@ mv moodle-$moodleVersion moodle
 # make the moodle directory writable for owner
 chown -R www-data moodle
 chmod -R 770 moodle
-#if [ "$installOfficePlugins" = "True" ]; then
 
-curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
-unzip o365.zip
-cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
-rm -rf o365-moodle-$moodleVersion
+# install Office 365 plugins
+#if [ "$installOfficePlugins" = "True" ]; then
+        curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/$moodleVersion.zip -L -o o365.zip
+        unzip o365.zip
+        cp -r o365-moodle-$moodleVersion/* /moodle/html/moodle
+        rm -rf o365-moodle-$moodleVersion
 #fi
-' > /var/tmp/setup-moodle.sh 
-chmod +x /var/tmp/setup-mooodle.sh
-/var/tmp/setup-moodle.sh & 
+' >> /moodle/setup-moodle.sh 
+chmod +x /moodle/setup-mooodle.sh
+/moodle/setup-moodle.sh & 
 
 
 # create moodledata directory

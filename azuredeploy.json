@@ -2,28 +2,10 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "storageAccountName": {
+        "resourcesPrefix": {
             "type": "string",
             "metadata": {
-                "description": "Prefix of storage account name, each node lives in its own storage account"
-            }
-        },
-        "virtualNetworkName": {
-            "type": "string",
-            "metadata": {
-                "description": "virtual network the nodes will be created in"
-            }
-        },
-        "adminUsername": {
-            "type": "string",
-            "metadata": {
-                "description": "ssh user name"
-            }
-        },
-        "adminPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "ssh password"
+                "description": "Prefix of storage account name, network, virtual machines, and so on"
             }
         },
         "vmSize": {
@@ -31,12 +13,6 @@
             "defaultValue": "Standard_DS1",
             "metadata": {
                 "description": "VM size for the nodes"
-            }
-        },
-        "vmNamePrefix": {
-            "type": "string",
-            "metadata": {
-                "description": "VM name prefix, a number will be appended for each node"
             }
         },
         "moodleVersion": {
@@ -51,9 +27,17 @@
                 "description": "The Moodle version you want to install."
             }
         },
-        "jboxpipDnsName": {
+        "adminUsername": {
             "type": "string",
-            "minLength": 3
+            "metadata": {
+                "description": "ssh user name"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "ssh password"
+            }
         },
         "mySQLuserPassword": {
             "type": "securestring",
@@ -69,6 +53,10 @@
         }
     },
     "variables": {
+        "storageAcctName": "[concat(parameters('resourcesPrefix'),'sa')]",
+        "jBoxPipName" : "[concat('jb-',parameters('resourcesPrefix'))]",
+        "vnetName": "[concat(parameters('resourcesPrefix'),'vnet')]",
+        "vmName": "[concat(parameters('resourcesPrefix'),'vm')]",
         "vnetPrefix": "172.18.0.0/16",
         "SubnetWeb": "webtier",
         "SubnetWebPrefix": "172.18.0.0/24",
@@ -81,7 +69,7 @@
         "SubnetDbPrefix": "172.18.2.0/24",
         "dbVmIPPrefix": "172.18.2.1",
         "nicName": "vmssnic",
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "webSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetWeb'))]",
         "sanSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
         "dbSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
@@ -92,7 +80,7 @@
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
         "scaleNumber": 2,
-        "SharedStorageAccountName": "[concat(parameters('storageAccountName'), uniqueString(resourceGroup().id))]",
+        "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
         "JumpVmStorageAccountContainerName": "vhds",
@@ -103,7 +91,7 @@
         "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
         "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
         "wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
-        "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/','vmSS',parameters('vmNamePrefix'))]",
+        "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/','vmSS',variables('vmName'))]",
         "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]",
         "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
         "natPoolName": "natpool",
@@ -134,7 +122,7 @@
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "name": "[concat(parameters('storageAccountName'), copyIndex())]",
+            "name": "[concat(variables('storageAcctName'), copyIndex())]",
             "apiVersion": "2015-05-01-preview",
             "location": "[resourceGroup().location]",
             "tags": {
@@ -156,7 +144,7 @@
                 "count": 5
             },
             "location": "[resourceGroup().location]",
-            "name": "[concat('vmss',parameters('storageAccountName'), copyIndex())]",
+            "name": "[concat('vmss',variables('storageAcctName'), copyIndex())]",
             "properties": {
                 "accountType": "Standard_LRS"
             },
@@ -166,7 +154,7 @@
         },
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "name": "[concat('db', parameters('storageAccountName'), copyIndex())]",
+            "name": "[concat('db', variables('storageAcctName'), copyIndex())]",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [],
@@ -195,7 +183,7 @@
             }
         },
         {
-            "name": "[parameters('virtualNetworkName')]",
+            "name": "[variables('vnetName')]",
             "type": "Microsoft.Network/virtualNetworks",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
@@ -243,7 +231,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "dnsSettings": {
-                    "domainNameLabel": "[parameters('jboxpipDnsName')]"
+                    "domainNameLabel": "[variables('jBoxPipName')]"
                 }
             }
         },
@@ -296,7 +284,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -326,7 +314,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
             "properties": {
                 "ipConfigurations": [
@@ -349,7 +337,7 @@
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('jboxpipName'))]"
             ],
             "tags": {
@@ -382,7 +370,7 @@
             "apiVersion": "2015-06-15",
             "properties": {
                 "dnsSettings": {
-                    "domainNameLabel": "[tolower(concat('lb-',parameters('vmNamePrefix')))]"
+                    "domainNameLabel": "[tolower(concat('lb-',variables('vmName')))]"
                 },
                 "publicIPAllocationMethod": "Dynamic",
                 "tags": {
@@ -393,7 +381,7 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex())]",
+            "name": "[concat('gfs',variables('vmName'), copyindex())]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "GfsVms"
@@ -404,7 +392,7 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', 'gfsNic', copyindex())]",
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'), copyindex())]",
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAcctName'), copyindex())]",
                 "[concat('Microsoft.Compute/availabilitySets/','GfsAvSet')]"
             ],
             "properties": {
@@ -412,7 +400,7 @@
                     "vmSize": "[parameters('vmSize')]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('gfs',parameters('vmNamePrefix'), copyIndex())]",
+                    "computerName": "[concat('gfs',variables('vmName'), copyIndex())]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -429,7 +417,7 @@
                     "osDisk": {
                         "name": "osdisk",
                         "vhd": {
-                            "uri": "[concat('http://',parameters('storageAccountName'), copyindex(), '.blob.core.windows.net/vhds/','gfs' ,parameters('vmNamePrefix'), copyIndex(), 'osdisk.vhd')]"
+                            "uri": "[concat('http://',variables('storageAcctName'), copyindex(), '.blob.core.windows.net/vhds/','gfs' ,variables('vmName'), copyIndex(), 'osdisk.vhd')]"
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
@@ -440,7 +428,7 @@
                             "diskSizeGB": "500",
                             "lun": 0,
                             "vhd": {
-                                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/gfs', parameters('vmNamePrefix'), copyIndex(), 'datadisk1.vhd')]"
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/gfs', variables('vmName'), copyIndex(), 'datadisk1.vhd')]"
                             },
                             "createOption": "Empty"
                         },
@@ -449,7 +437,7 @@
                             "diskSizeGB": "500",
                             "lun": 1,
                             "vhd": {
-                                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/gfs', parameters('vmNamePrefix'), copyIndex(), 'datadisk2.vhd')]"
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/gfs', variables('vmName'), copyIndex(), 'datadisk2.vhd')]"
                             },
                             "createOption": "Empty"
                         }
@@ -467,7 +455,7 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('db',parameters('vmNamePrefix'), copyindex())]",
+            "name": "[concat('db',variables('vmName'), copyindex())]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "dbVms"
@@ -478,7 +466,7 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', 'dbNic', copyindex())]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'db', parameters('storageAccountName'), copyindex())]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'db', variables('storageAcctName'), copyindex())]",
                 "[concat('Microsoft.Compute/availabilitySets/', 'dbAvSet')]"
             ],
             "properties": {
@@ -489,7 +477,7 @@
                     "id": "[resourceId('Microsoft.Compute/availabilitySets','dbAvSet')]"
                 },
                 "osProfile": {
-                    "computerName": "[concat('db',parameters('vmNamePrefix'), copyIndex())]",
+                    "computerName": "[concat('db',variables('vmName'), copyIndex())]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -503,7 +491,7 @@
                     "osDisk": {
                         "name": "osdisk",
                         "vhd": {
-                            "uri": "[concat('http://',parameters('storageAccountName'), copyindex(), '.blob.core.windows.net/vhds/', 'db',parameters('vmNamePrefix'), copyIndex(), 'osdisk.vhd')]"
+                            "uri": "[concat('http://',variables('storageAcctName'), copyindex(), '.blob.core.windows.net/vhds/', 'db',variables('vmName'), copyIndex(), 'osdisk.vhd')]"
                         },
                         "caching": "ReadWrite",
                         "createOption": "FromImage"
@@ -514,7 +502,7 @@
                             "diskSizeGB": "500",
                             "lun": 0,
                             "vhd": {
-                                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', parameters('vmNamePrefix'), copyIndex(), 'datadisk1.vhd')]"
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk1.vhd')]"
                             },
                             "createOption": "Empty"
                         },
@@ -523,7 +511,7 @@
                             "diskSizeGB": "500",
                             "lun": 1,
                             "vhd": {
-                                "uri": "[concat('http://', parameters('storageAccountName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', parameters('vmNamePrefix'), copyIndex(), 'datadisk2.vhd')]"
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk2.vhd')]"
                             },
                             "createOption": "Empty"
                         }
@@ -544,7 +532,7 @@
                     "location": "[resourceGroup().location]",
                     "apiVersion": "2015-06-15",
                     "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/','db',parameters('vmNamePrefix'),copyIndex())]"
+                        "[concat('Microsoft.Compute/virtualMachines/','db',variables('vmName'),copyIndex())]"
                     ],
                     "tags": {
                         "displayName": "install_mariadb"
@@ -565,13 +553,13 @@
             ]            
         },
         {
-            "name": "[concat('jbox',parameters('vmNamePrefix'))]",
+            "name": "[concat('jbox',variables('vmName'))]",
             "type": "Microsoft.Compute/virtualMachines",
             "location": "[resourceGroup().location]",
             "apiVersion": "2015-06-15",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0')]",
-                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0/extensions/setupGluster')]",                
+                "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0')]",
+                "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0/extensions/setupGluster')]",                
                 "[concat('Microsoft.Storage/storageAccounts/', variables('SharedStorageAccountName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', 'jboxNic')]"
             ],
@@ -590,7 +578,7 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[concat('jbox',parameters('vmNamePrefix'))]",
+                    "computerName": "[concat('jbox',variables('vmName'))]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
@@ -606,7 +594,7 @@
                         "createOption": "FromImage",
                         "name": "JumpVmOSDisk",
                         "vhd": {
-                            "uri": "[concat('http://', variables('SharedStorageAccountName'), '.blob.core.windows.net/vhds/jbox', parameters('vmNamePrefix'), '-osdisk.vhd')]"
+                            "uri": "[concat('http://', variables('SharedStorageAccountName'), '.blob.core.windows.net/vhds/jbox', variables('vmName'), '-osdisk.vhd')]"
                         }
                     }
                 }
@@ -618,7 +606,7 @@
                     "location": "[resourceGroup().location]",
                     "apiVersion": "2015-06-15",
                     "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/', concat('jbox',parameters('vmNamePrefix')))]"
+                        "[concat('Microsoft.Compute/virtualMachines/', concat('jbox',variables('vmName')))]"
                     ],
                     "tags": {
                         "displayName": "install_moodle"
@@ -632,7 +620,7 @@
                             "fileUris": [
                                 "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                             ],
-                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',parameters('vmNamePrefix'),'0', ' ',variables('volumeName') )]"
+                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
                         }
                     }
                 }
@@ -644,14 +632,14 @@
             "location": "[resourceGroup().location]",
             "apiVersion": "2016-03-30",
             "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '0')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '1')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '2')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '3')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',parameters('storageAccountName'), '4')]",
-                "[concat('Microsoft.Compute/virtualMachines/gfs',parameters('vmNamePrefix'),'0/extensions/setupGluster')]",                
+                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '0')]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '1')]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '2')]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '3')]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '4')]",
+                "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0/extensions/setupGluster')]",                
                 "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
-                "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
             "tags": {
                 "displayName": "webVmSS"
@@ -670,11 +658,11 @@
                     "storageProfile": {
                         "osDisk": {
                             "vhdContainers": [
-                                "[concat('https://', 'vmss', parameters('storageAccountName'), '0.blob.core.windows.net/vhds0')]",
-                                "[concat('https://', 'vmss', parameters('storageAccountName'), '1.blob.core.windows.net/vhds1')]",
-                                "[concat('https://', 'vmss', parameters('storageAccountName'), '2.blob.core.windows.net/vhds2')]",
-                                "[concat('https://', 'vmss', parameters('storageAccountName'), '3.blob.core.windows.net/vhds3')]",
-                                "[concat('https://', 'vmss', parameters('storageAccountName'), '4.blob.core.windows.net/vhds4')]"
+                                "[concat('https://', 'vmss', variables('storageAcctName'), '0.blob.core.windows.net/vhds0')]",
+                                "[concat('https://', 'vmss', variables('storageAcctName'), '1.blob.core.windows.net/vhds1')]",
+                                "[concat('https://', 'vmss', variables('storageAcctName'), '2.blob.core.windows.net/vhds2')]",
+                                "[concat('https://', 'vmss', variables('storageAcctName'), '3.blob.core.windows.net/vhds3')]",
+                                "[concat('https://', 'vmss', variables('storageAcctName'), '4.blob.core.windows.net/vhds4')]"
                             ],
                             "name": "osdisk",
                             "caching": "ReadOnly",
@@ -688,7 +676,7 @@
                     }
                     },
                     "osProfile": {
-                        "computerNamePrefix": "[concat('web',parameters('vmNamePrefix'))]",
+                        "computerNamePrefix": "[concat('web',variables('vmName'))]",
                         "adminUsername": "[parameters('adminUsername')]",
                         "adminPassword": "[parameters('adminPassword')]"
                     },
@@ -702,7 +690,7 @@
                                             "name": "[variables('ipConfigName')]",
                                             "properties": {
                                                 "subnet": {
-                                                    "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'), '/subnets/', variables('subnetWeb'))]"
+                                                    "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('vnetName'), '/subnets/', variables('subnetWeb'))]"
                                                 },
                                                 "loadBalancerBackendAddressPools": [
                                                     {
@@ -753,7 +741,7 @@
                                         "fileUris": [
                                             "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
                                         ],
-                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',parameters('vmNamePrefix'),'0', ' ',variables('volumeName') )]"
+                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
                                     }
                                 }
                             }
@@ -764,7 +752,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat('gfs',parameters('vmNamePrefix'), copyindex(), '/setupGluster')]",
+            "name": "[concat('gfs',variables('vmName'), copyindex(), '/setupGluster')]",
             "apiVersion": "2015-05-01-preview",
             "tags": {
                 "displayName": "GfsVmExtension"
@@ -775,7 +763,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/gfs', parameters('vmNamePrefix'), copyindex())]"
+                "[concat('Microsoft.Compute/virtualMachines/gfs', variables('vmName'), copyindex())]"
             ],
             "properties": {
                 "publisher": "Microsoft.OSTCExtensions",
@@ -785,7 +773,7 @@
                     "fileUris": [
                         "[variables('customScriptFilePath')]"
                     ],
-                    "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', parameters('vmNamePrefix'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('scaleNumber'))]"
+                    "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', variables('vmName'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('scaleNumber'))]"
                 }
             }
         },
