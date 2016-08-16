@@ -4,7 +4,7 @@
     "parameters": {
         "resourcesPrefix": {
             "type": "string",
-            "defaultValue": "moodlecluster",
+            "defaultValue": "mooclu",
             "metadata": {
                 "description": "Prefix of storage account name, network, virtual machines, and so on"
             }
@@ -121,9 +121,9 @@
         "install_mariadbScriptFileName": "install_mariadb.sh",
         "nodeDBCount" : 2,
         "subnetIPBase": "172.18.2.",
-        "mariadbbe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/backendAddressPools/mariadb-be')]",
-        "mariadbfipc": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/frontendIPConfigurations/mariadb-fipc')]",
-        "mariadbprobe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/probes/mariadb-probe')]"    },
+        "mariadbbe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/backendAddressPools/mariadb-be')]",
+        "mariadbfipc": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/frontendIPConfigurations/mariadb-fipc')]",
+        "mariadbprobe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/probes/mariadb-probe')]"    },
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
@@ -319,6 +319,7 @@
                 "count": "[variables('scaleNumber')]"
             },
             "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'mariadbLb')]",
                 "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
             "properties": {
@@ -333,7 +334,7 @@
                             },
                              "loadBalancerBackendAddressPools": [
                             {
-                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'), '/backendAddressPools/mariadb-be')]"
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'), '/backendAddressPools/mariadb-be')]"
                             }
 ]                            
                         }
@@ -638,7 +639,7 @@
         },
      {  
          "apiVersion":"2015-06-15",
-         "name":"mariadb-lb",
+         "name":"mariadblb",
          "type":"Microsoft.Network/loadBalancers",
          "location":"[resourceGroup().location]",
          "dependsOn": [
