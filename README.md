@@ -3,33 +3,18 @@ Moodle deployment using Azure Resource Manager Template
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://azuredeploy.net/)
 
+This Azure Resource Manager template creates a clustered moodle environment. 
 
-<?php  // Moodle configuration file
+The following resources will be created:
 
-unset($CFG);
-global $CFG;
-$CFG = new stdClass();
+- a Virtual Machine Scale Set (up to 10 instances) for the web tier, with auto-scale configured
+- 04 nodes Gluster Cluster  (2 Premium disks attached, raid0, a gluster brick in each virtual machine)
+- 02 nodes MariaDb Active-Active Cluster
+- an Internal Load Balancer in front of the MariaDb clustered
+- an public Load Balancer in front of the Virtual Machine Scale Set (web tier)
+- a virtual machine used as a JumpBox for the environment, acessible via SSH and http
+- a lot of underlying resources need for the environment (virtual network, storage accounts, etc)
 
-$CFG->dbtype    = 'mariadb';
-$CFG->dblibrary = 'native';
-$CFG->dbhost    = '172.18.2.10';
-$CFG->dbname    = 'moodle';
-$CFG->dbuser    = 'root';
-$CFG->dbpass    = 'senha1..';
-$CFG->prefix    = 'mdl_';
-$CFG->dboptions = array (
-  'dbpersist' => 0,
-  'dbport' => '',
-  'dbsocket' => '',
-);
+Hope it helps.
 
-$CFG->wwwroot   = 'http://lb-ptxxyz.eastus.cloudapp.azure.com';
-$CFG->dataroot  = '/moodle/moodledata';
-$CFG->admin     = 'admin';
 
-$CFG->directorypermissions = 0777;
-
-require_once(dirname(__FILE__) . '/lib/setup.php');
-
-// There is no php closing tag in this file,
-// it is intentional because it prevents trailing whitespace problems!
