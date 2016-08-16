@@ -22,8 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-glusterNode=$2
-glusterVolume=$3 
+glusterNode=$1
+glusterVolume=$2 
 
 # install pre-requisites
 apt-get -y install python-software-properties
@@ -43,6 +43,7 @@ apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-
 mkdir -p /moodle
  
 # mount gluster files system
+echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle'  > /tmp/mount.log
 mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 # make the moodle directory writable for owner
@@ -61,6 +62,9 @@ echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #update virtual site configuration 
 sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled/000-default.conf
+
+#enable ssl 
+a2enmod rewrite ssl
 
 # restart Apache
 service apache2 restart 

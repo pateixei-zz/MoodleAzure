@@ -80,6 +80,7 @@
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
         "scaleNumber": 2,
+        "gfsScaleNumber": 3,
         "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
@@ -92,15 +93,16 @@
         "wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
         "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/','vmSS',variables('vmName'))]",
         "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]",
-        "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
         "natPoolName": "natpool",
         "bePoolName": "bePool",
         "natStartPort": 50000,
         "natEndPort": 50119,
         "natBackendPort": 22,
         "ilbNicName": "ilbnic",
-        "ipConfigName": "ipcfg_lb",
-        "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontEnd')]",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
+        "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/ipcfg_lb')]",
+        "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
+        "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",        
         "storageApiVersion": "2015-06-15",
         "accountid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('diagnosticsStorageAccountResourceGroup'),'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]",
         "osType": {
@@ -129,7 +131,7 @@
             },
             "copy": {
                 "name": "gfs",
-                "count": "[variables('scaleNumber')]"
+                "count": 3
             },
             "properties": {
                 "accountType": "Premium_LRS"
@@ -280,7 +282,7 @@
             },
             "copy": {
                 "name": "gfs",
-                "count": "[variables('scaleNumber')]"
+                "count": "[variables('gfsScaleNumber')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
@@ -369,7 +371,7 @@
             "apiVersion": "2015-06-15",
             "properties": {
                 "dnsSettings": {
-                    "domainNameLabel": "[tolower(concat('lb-',variables('vmName')))]"
+                    "domainNameLabel": "[tolower(concat('lb-',parameters('resourcesPrefix')))]"
                 },
                 "publicIPAllocationMethod": "Dynamic",
                 "tags": {
@@ -387,7 +389,7 @@
             },
             "copy": {
                 "name": "gfs",
-                "count": "[variables('scaleNumber')]"
+                "count": "[variables('gfsScaleNumber')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', 'gfsnic', copyindex())]",
@@ -626,6 +628,78 @@
             ]
         },
         {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/loadBalancers",
+            "location": "[resourceGroup().location]",
+            "name": "lbWeb",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/','webpip')]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                {
+                    "name": "ipcfg_lb",
+                    "properties": {
+                    "publicIPAddress": {
+                        "id": "[variables('publicIPAddressID')]"
+                    }
+                    }
+                }
+                ],
+                "backendAddressPools": [
+                {
+                    "name": "[variables('bePoolName')]"
+                }
+                ],
+                "loadBalancingRules": [
+                {
+                    "name": "LBRule",
+                    "properties": {
+                    "frontendIPConfiguration": {
+                        "id": "[variables('frontEndIPConfigID')]"
+                    },
+                    "backendAddressPool": {
+                        "id": "[variables('lbPoolID')]"
+                    },
+                    "protocol": "tcp",
+                    "frontendPort": 80,
+                    "backendPort": 80,
+                    "enableFloatingIP": false,
+                    "idleTimeoutInMinutes": 5,
+                    "probe": {
+                        "id": "[variables('lbProbeID')]"
+                    }
+                    }
+                }
+                ],
+                "probes": [
+                {
+                    "name": "tcpProbe",
+                    "properties": {
+                    "protocol": "tcp",
+                    "port": 80,
+                    "intervalInSeconds": "5",
+                    "numberOfProbes": "2"
+                    }
+                }
+                ],
+                "inboundNatPools": [
+                {
+                    "name": "[variables('natPoolName')]",
+                    "properties": {
+                    "frontendIPConfiguration": {
+                        "id": "[variables('frontEndIPConfigID')]"
+                    },
+                    "protocol": "tcp",
+                    "frontendPortRangeStart": "[variables('natStartPort')]",
+                    "frontendPortRangeEnd": "[variables('natEndPort')]",
+                    "backendPort": "[variables('natBackendPort')]"
+                    }
+                }
+                ]
+            }            
+        },        
+        {
             "type": "Microsoft.Compute/virtualMachineScaleSets",
             "name": "webfarm",
             "location": "[resourceGroup().location]",
@@ -686,7 +760,7 @@
                                 "properties": {
                                     "ipConfigurations": [
                                         {
-                                            "name": "[variables('ipConfigName')]",
+                                            "name": "ipcfg_lb",
                                             "properties": {
                                                 "subnet": {
                                                     "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('vnetName'), '/subnets/', variables('subnetWeb'))]"
@@ -696,11 +770,11 @@
                                                         "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/backendAddressPools/', variables('bePoolName'))]"
                                                     }
                                                 ],
-                                                "loadBalancerInboundNatPools": [
-                                                    {
-                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/inboundNatPools/', variables('natPoolName'))]"
+                                               "loadBalancerInboundNatPools": [
+                                                  {
+                                                      "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/inboundNatPools/', variables('natPoolName'))]"
                                                     }
-                                                ]
+                                               ]      
                                             }
                                         }
                                     ],
@@ -759,7 +833,7 @@
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "gfs",
-                "count": "[variables('scaleNumber')]"
+                "count": "[variables('gfsScaleNumber')]"
             },
             "dependsOn": [
                 "[concat('Microsoft.Compute/virtualMachines/gfs', variables('vmName'), copyindex())]"
@@ -772,50 +846,11 @@
                     "fileUris": [
                         "[variables('customScriptFilePath')]"
                     ],
-                    "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', variables('vmName'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('scaleNumber'))]"
+                    "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', variables('vmName'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('GfsScaleNumber'))]"
                 }
             }
         },
-        {
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Network/loadBalancers",
-            "location": "[resourceGroup().location]",
-            "name": "lbWeb",
-            "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/','webpip')]"
-            ],
-            "properties": {
-                "frontendIPConfigurations": [
-                    {
-                        "properties": {
-                            "publicIPAddress": {
-                                "id": "[variables('publicIPAddressID')]"
-                            }
-                        },
-                        "name": "LoadBalancerFrontend"
-                    }
-                ],
-                "backendAddressPools": [
-                    {
-                        "name": "[variables('bePoolName')]"
-                    }
-                ],
-                "inboundNatPools": [
-                    {
-                        "name": "[variables('natPoolName')]",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[variables('frontEndIPConfigID')]"
-                            },
-                            "protocol": "tcp",
-                            "frontendPortRangeStart": "[variables('natStartPort')]",
-                            "frontendPortRangeEnd": "[variables('natEndPort')]",
-                            "backendPort": "[variables('natBackendPort')]"
-                        }
-                    }
-                ]
-            }
-        },
+
         {
             "name": "GfsAvSet",
             "type": "Microsoft.Compute/availabilitySets",
