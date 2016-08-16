@@ -4,13 +4,14 @@
     "parameters": {
         "resourcesPrefix": {
             "type": "string",
+            "defaultValue": "moodlecluster",
             "metadata": {
                 "description": "Prefix of storage account name, network, virtual machines, and so on"
             }
         },
         "vmSize": {
             "type": "string",
-            "defaultValue": "Standard_DS1",
+            "defaultValue": "Standard_DS2",
             "metadata": {
                 "description": "VM size for the nodes"
             }
@@ -29,6 +30,7 @@
         },
         "adminUsername": {
             "type": "string",
+            "defaultValue": "azureadmin",
             "metadata": {
                 "description": "ssh user name"
             }
@@ -80,7 +82,7 @@
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
         "scaleNumber": 2,
-        "gfsScaleNumber": 3,
+        "gfsScaleNumber": 2,
         "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
@@ -118,8 +120,10 @@
         "mariadbScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
         "install_mariadbScriptFileName": "install_mariadb.sh",
         "nodeDBCount" : 2,
-        "subnetIPBase": "172.18.2."
-    },
+        "subnetIPBase": "172.18.2.",
+        "mariadbbe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/backendAddressPools/mariadb-be')]",
+        "mariadbfipc": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/frontendIPConfigurations/mariadb-fipc')]",
+        "mariadbprobe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'),'/probes/mariadb-probe')]"    },
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
@@ -131,7 +135,7 @@
             },
             "copy": {
                 "name": "gfs",
-                "count": 3
+                "count": "[variables('GfsScaleNumber')]"
             },
             "properties": {
                 "accountType": "Premium_LRS"
@@ -627,6 +631,62 @@
                 }
             ]
         },
+     {  
+         "apiVersion":"2015-06-15",
+         "name":"mariadb-lb",
+         "type":"Microsoft.Network/loadBalancers",
+         "location":"[resourceGroup().location]",
+         "properties":{  
+            "frontendIPConfigurations":[  
+               {  
+                  "name":"mariadb-fipc",
+                  "properties":{  
+                     "privateIPAllocationMethod":"Static",
+                     "privateIPAddress":"172.18.2.5",
+                     "subnet":{  
+                        "id":"[variables('dbsubnetRef')]"
+                     }
+                  }
+               }
+            ],
+            "backendAddressPools":[  
+               {  
+                  "name":"mariadb-be"
+               }
+            ],
+            "loadBalancingRules":[  
+               {  
+                  "name":"MariaDbListener",
+                  "properties":{  
+                     "backendAddressPool":{  
+                        "id":"[variables('mariadbbe')]"
+                     },
+                     "frontendIPConfiguration":{  
+                        "id":"[variables('mariadbfipc')]"
+                     },
+                     "probe":{  
+                        "id":"[variables('mariadbprobe')]"
+                     },
+                     "protocol":"tcp",
+                     "frontendPort":3066,
+                     "backendPort":3066,
+                     "enableFloatingIP":false
+                  }
+               }
+            ],
+            "probes":[  
+               {  
+                  "name":"mariadb-probe",
+                  "properties":{  
+                     "protocol":"tcp",
+                     "port":3306,
+                     "intervalInSeconds":"5",
+                     "numberOfProbes":"6"
+                  }
+               }
+            ]
+         }
+      },        
         {
             "apiVersion": "2016-03-30",
             "type": "Microsoft.Network/loadBalancers",

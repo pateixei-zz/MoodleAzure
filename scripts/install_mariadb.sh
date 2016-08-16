@@ -92,8 +92,8 @@ echo -e '# Automatically generated for Debian scripts. DO NOT TOUCH!
 mv ~/debian.cnf /etc/mysql/
 
 mysql -u root <<EOF
-CREATE DATABASE webappdb;
-GRANT ALL PRIVILEGES ON webappdb.* TO 'webappuser'@'%'
+CREATE DATABASE moodle;
+GRANT ALL PRIVILEGES ON moodle.* TO 'moodledba'@'%'
 IDENTIFIED BY '$USERPASSWORD';
 FLUSH PRIVILEGES;
 
