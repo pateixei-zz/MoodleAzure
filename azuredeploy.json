@@ -677,8 +677,8 @@
                         "id":"[variables('mariadbprobe')]"
                      },
                      "protocol":"tcp",
-                     "frontendPort":3066,
-                     "backendPort":3066,
+                     "frontendPort":3306,
+                     "backendPort":3306,
                      "enableFloatingIP":false
                   }
                }
