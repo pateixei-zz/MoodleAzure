@@ -82,7 +82,7 @@
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
         "scaleNumber": 2,
-        "gfsScaleNumber": 2,
+        "gfsScaleNumber": 4,
         "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
@@ -330,7 +330,12 @@
                             "privateIPAddress": "[concat(variables('dbVmIPPrefix'), copyindex())]",
                             "subnet": {
                                 "id": "[variables('dbSubnetRef')]"
+                            },
+                             "loadBalancerBackendAddressPools": [
+                            {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'), '/backendAddressPools/mariadbbe')]"
                             }
+]                            
                         }
                     }
                 ]
