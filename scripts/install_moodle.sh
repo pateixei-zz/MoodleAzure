@@ -25,7 +25,7 @@
 moodleVersion=$1
 glusterNode=$2
 glusterVolume=$3 
-
+moodledbapwd=$4
 # create gluster mount point
 mkdir -p /moodle
 
@@ -96,3 +96,34 @@ sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled
 # restart Apache
 service apache2 restart 
 
+echo -e "
+<?php  // Moodle configuration file
+
+unset($CFG);
+global $CFG;
+$CFG = new stdClass();
+
+$CFG->dbtype    = 'mariadb';
+$CFG->dblibrary = 'native';
+$CFG->dbhost    = '172.18.2.5';
+$CFG->dbname    = 'moodle';
+$CFG->dbuser    = 'moodledba';
+$CFG->dbpass    = '"$moodledbapwd"';
+$CFG->prefix    = 'mdl_';
+$CFG->dboptions = array (
+  'dbpersist' => 0,
+  'dbport' => 3306,
+  'dbsocket' => '',
+);
+
+$CFG->wwwroot   = '';
+$CFG->dataroot  = '/moodle/moodledata';
+$CFG->admin     = 'admin';
+
+$CFG->directorypermissions = 0777;
+
+require_once(dirname(__FILE__) . '/lib/setup.php');
+
+// There is no php closing tag in this file,
+// it is intentional because it prevents trailing whitespace problems!
+" > /moodle/html/moodle/config.php

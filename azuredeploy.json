@@ -883,7 +883,7 @@
                                         "fileUris": [
                                             "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
                                         ],
-                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
+                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),parameters('mySQLuserPassword') )]"
                                     }
                                 }
                             }
