@@ -333,7 +333,7 @@
                             },
                              "loadBalancerBackendAddressPools": [
                             {
-                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'), '/backendAddressPools/mariadbbe')]"
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadb-lb'), '/backendAddressPools/mariadb-be')]"
                             }
 ]                            
                         }
