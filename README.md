@@ -16,5 +16,6 @@ The following resources will be created:
 - a lot of underlying resources need for the environment (virtual network, storage accounts, etc)
 
 Hope it helps.
+Feedbacks are welcome.
 
 
