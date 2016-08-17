@@ -43,18 +43,12 @@ mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 #create html directory for storing moodle files
 mkdir /moodle/html
-chown -R www-data /moodle/html/moodle
-chmod -R 770 /moodle/html/moodle
 
 # create directory for apache ssl certs
 mkdir /moodle/certs
-chown -R www-data /moodle/certs
-chmod -R 770 /moodle/certs
 
 # create moodledata directory
 mkdir /moodle/moodledata
-chown -R www-data /moodle/moodledata
-chmod -R 770 /moodle/moodledata
 
 # install pre-requisites
 apt-get install -y --fix-missing python-software-properties unzip
@@ -137,7 +131,16 @@ sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
 sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
 sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
+chown -R www-data /moodle/html/moodle
+chown -R www-data /moodle/certs
+chown -R www-data /moodle/moodledata
+chmod -R 770 /moodle/html/moodle
+chmod -R 770 /moodle/certs
+chmod -R 770 /moodle/moodledata
+
 # restart Apache
 service apache2 restart 
+
+echo "/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true" > /var/tmp/moodle-install.log 
 
 /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
