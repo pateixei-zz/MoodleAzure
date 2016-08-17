@@ -114,7 +114,7 @@
             "version": "latest"
         },
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webpip')]",
-        "siteFQDN" : "[reference(variables('publicIPAddressID'),providers('Microsoft.Network','publicIPAddresses').apiVersions[0]).dnsSettings.fqdn]", 
+        "siteFQDN" : "", 
         "moodleScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
         "install_moodleScriptFileName": "install_moodle.sh",
         "setup_moodleScriptFileName": "setup_moodle.sh",
@@ -632,7 +632,7 @@
                             "fileUris": [
                                 "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                             ],
-                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),' ',parameters('mySQLuserPassword'),' ',variables('siteFQDN') )]"
+                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),' ',parameters('mySQLuserPassword'),' ', [reference(variables('publicIPAddressID'),providers('Microsoft.Network','publicIPAddresses').apiVersions[0]).dnsSettings.fqdn] )]"
                         }
                     }
                 }
