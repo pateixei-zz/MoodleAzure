@@ -4,7 +4,7 @@
     "parameters": {
         "resourcesPrefix": {
             "type": "string",
-            "defaultValue": "mooclu",
+            "defaultValue": "azmooclus",
             "metadata": {
                 "description": "Prefix of storage account name, network, virtual machines, and so on"
             }
@@ -781,6 +781,7 @@
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '3')]",
                 "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '4')]",
                 "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0/extensions/setupGluster')]",                
+                "[concat('Microsoft.Compute/virtualMachines/jbox',variables('vmName'),'/extensions/install_moodle')]",                
                 "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
                 "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
