@@ -43,7 +43,7 @@ apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-
 mkdir -p /moodle
  
 # mount gluster files system
-echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle'  > /tmp/mount.log
+echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle'  
 mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 # make the moodle directory writable for owner

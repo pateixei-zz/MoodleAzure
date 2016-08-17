@@ -631,7 +631,7 @@
                             "fileUris": [
                                 "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                             ],
-                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
+                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),' ',parameters('mySQLuserPassword') )]"
                         }
                     }
                 }
@@ -883,7 +883,7 @@
                                         "fileUris": [
                                             "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
                                         ],
-                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),parameters('mySQLuserPassword') )]"
+                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
                                     }
                                 }
                             }
