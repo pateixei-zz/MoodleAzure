@@ -57,7 +57,6 @@ echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #enable ssl 
 a2enmod rewrite ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt
 
 #update virtual site configuration 
 echo -e '
@@ -78,6 +77,12 @@ echo -e '
         SSLEngine on
         SSLCertificateFile /moodle/certs/apache.crt
         SSLCertificateKeyFile /moodle/certs/apache.key
+
+        BrowserMatch "MSIE [2-6]" \
+                        nokeepalive ssl-unclean-shutdown \
+                        downgrade-1.0 force-response-1.0
+        BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+
 </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
 # php config 

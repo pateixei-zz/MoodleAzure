@@ -26,6 +26,7 @@ moodleVersion=$1
 glusterNode=$2
 glusterVolume=$3 
 moodledbapwd=$4
+siteFQDN=$5
 # create gluster mount point
 
 
@@ -97,7 +98,7 @@ echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #enable ssl 
 a2enmod rewrite ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
 
 #update virtual site configuration 
 echo -e '
@@ -118,6 +119,10 @@ echo -e '
         SSLEngine on
         SSLCertificateFile /moodle/certs/apache.crt
         SSLCertificateKeyFile /moodle/certs/apache.key
+        BrowserMatch "MSIE [2-6]" \
+                        nokeepalive ssl-unclean-shutdown \
+                        downgrade-1.0 force-response-1.0
+        BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown        
 
 </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
@@ -134,3 +139,5 @@ sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/
 
 # restart Apache
 service apache2 restart 
+
+/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=$siteFQDN --dataroot='/moodle/moodledata' --dbhost=172.18.2.5 --dbpass=$dbpass --fullname='Moodle LMS' --shortname='Moodle' --adminuser='admin' --adminpass=$MoodleAdminPass --adminemail='root@localhost' --non-interactive --agree-license --allow-unstable || true
