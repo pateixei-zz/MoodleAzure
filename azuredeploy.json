@@ -632,7 +632,7 @@
                             "fileUris": [
                                 "[concat(variables('moodleScriptLocation'),variables('install_moodleScriptFileName'))]"
                             ],
-                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),' ',parameters('mySQLuserPassword'),' ', [reference(variables('publicIPAddressID'),providers('Microsoft.Network','publicIPAddresses').apiVersions[0]).dnsSettings.fqdn] )]"
+                            "commandToExecute": "[concat('sh ', variables('install_moodleScriptFileName'),' ',parameters('moodleVersion'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName'),' ',parameters('mySQLuserPassword'),' ', reference(variables('publicIPAddressID'),providers('Microsoft.Network','publicIPAddresses').apiVersions[0]).dnsSettings.fqdn )]"
                         }
                     }
                 }
