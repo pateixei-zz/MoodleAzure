@@ -141,6 +141,6 @@ chmod -R 770 /moodle/moodledata
 # restart Apache
 service apache2 restart 
 
-echo "/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true" > /var/tmp/moodle-install.log 
+echo /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true > /var/tmp/moodle-install.log 
 
 /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
