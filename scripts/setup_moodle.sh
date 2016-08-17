@@ -31,7 +31,8 @@ apt-get -y install python-software-properties
 #configure gluster repository & install gluster client
 add-apt-repository ppa:gluster/glusterfs-3.7 -y
 apt-get -y update
-apt-get -y install glusterfs-client mysql-client git 
+apt-get -y --force-yes install glusterfs-client mysql-client git 
+
 
 # install the LAMP stack
 apt-get -y install apache2 php5

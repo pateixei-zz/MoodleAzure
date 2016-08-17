@@ -35,7 +35,7 @@ mkdir -p /moodle
 #configure gluster repository & install gluster client
 add-apt-repository ppa:gluster/glusterfs-3.7 -y
 apt-get -y update
-apt-get -y install glusterfs-client mysql-client git 
+apt-get -y --force-yes install glusterfs-client mysql-client git 
 
 # mount gluster files system
 echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
@@ -140,4 +140,4 @@ sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/
 # restart Apache
 service apache2 restart 
 
-/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=$siteFQDN --dataroot='/moodle/moodledata' --dbhost=172.18.2.5 --dbpass=$dbpass --fullname='Moodle LMS' --shortname='Moodle' --adminuser='admin' --adminpass=$MoodleAdminPass --adminemail='root@localhost' --non-interactive --agree-license --allow-unstable || true
+/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
