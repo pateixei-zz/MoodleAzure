@@ -21,128 +21,128 @@
 # SOFTWARE.
 
 #parameters 
-
-moodleVersion=$1
-glusterNode=$2
-glusterVolume=$3 
-moodledbapwd=$4
-siteFQDN=$5
-# create gluster mount point
-
-
-mkdir -p /moodle
-
-#configure gluster repository & install gluster client
-add-apt-repository ppa:gluster/glusterfs-3.7 -y
-apt-get -y update
-apt-get -y --force-yes install glusterfs-client mysql-client git 
-
-# mount gluster files system
-echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
-mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-
-#create html directory for storing moodle files
-mkdir -p /moodle/html
-
-# create directory for apache ssl certs
-mkdir -p /moodle/certs
-
-# create moodledata directory
-mkdir -p /moodle/moodledata
-
-# install pre-requisites
-apt-get install -y --fix-missing python-software-properties unzip
-
-# install the LAMP stack
-apt-get install -y apache2 mysql-client php5
-
-# install moodle requirements
-apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
+{
+    moodleVersion=$1
+    glusterNode=$2
+    glusterVolume=$3 
+    moodledbapwd=$4
+    siteFQDN=$5
+    # create gluster mount point
 
 
-# install Moodle 
-echo '#!/bin/bash
-cd /tmp
+    mkdir -p /moodle
 
-# downloading moodle 
-curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
-unzip moodle.zip
-mv moodle-'$moodleVersion' /moodle/html/moodle
+    #configure gluster repository & install gluster client
+    add-apt-repository ppa:gluster/glusterfs-3.7 -y
+    apt-get -y update
+    apt-get -y --force-yes install glusterfs-client mysql-client git 
 
-# install Office 365 plugins
-#if [ "$installOfficePlugins" = "True" ]; then
-        curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/'$moodleVersion'.zip -L -o o365.zip
-        unzip o365.zip
-        cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
-        rm -rf o365-moodle-'$moodleVersion'
-#fi
-' > /tmp/setup-moodle.sh 
-chmod +x /tmp/setup-moodle.sh
-/tmp/setup-moodle.sh 
+    # mount gluster files system
+    echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
+    mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
-# create cron entry
-# It is scheduled for once per day. It can be changed as needed.
-echo '0 0 * * * php /moodle/html/moodle/admin/cli/cron.php > /dev/null 2>&1' > cronjob
-crontab cronjob
+    #create html directory for storing moodle files
+    mkdir -p /moodle/html
 
-# updapte Apache configuration
-cp /etc/apache2/apache2.conf apache2.conf.bak
-sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
-echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
+    # create directory for apache ssl certs
+    mkdir -p /moodle/certs
 
-#enable ssl 
-a2enmod rewrite ssl
-echo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
+    # create moodledata directory
+    mkdir -p /moodle/moodledata
 
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
+    # install pre-requisites
+    apt-get install -y --fix-missing python-software-properties unzip
 
-#update virtual site configuration 
-echo -e '
-<VirtualHost *:80>
-        #ServerName www.example.com
-        ServerAdmin webmaster@localhost
-        DocumentRoot /moodle/html/moodle
-        #LogLevel info ssl:warn
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-        #Include conf-available/serve-cgi-bin.conf
-</VirtualHost>
-<VirtualHost *:443>
-        DocumentRoot /moodle/html/moodle
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
+    # install the LAMP stack
+    apt-get install -y apache2 mysql-client php5
 
-        SSLEngine on
-        SSLCertificateFile /moodle/certs/apache.crt
-        SSLCertificateKeyFile /moodle/certs/apache.key
-        BrowserMatch "MSIE [2-6]" \
-                        nokeepalive ssl-unclean-shutdown \
-                        downgrade-1.0 force-response-1.0
-        BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown        
+    # install moodle requirements
+    apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
 
-</VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
-# php config 
-PhpIni=/etc/php5/apache2/php.ini
-sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
-sed -i "s/;opcache.use_cwd = 1/opcache.use_cwd = 1/" $PhpIni
-sed -i "s/;opcache.validate_timestamps = 1/opcache.validate_timestamps = 1/" $PhpIni
-sed -i "s/;opcache.save_comments = 1/opcache.save_comments = 1/" $PhpIni
-sed -i "s/;opcache.enable_file_override = 0/opcache.enable_file_override = 0/" $PhpIni
-sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
-sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
-sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
+    # install Moodle 
+    echo '#!/bin/bash
+    cd /tmp
 
-chown -R www-data /moodle/html/moodle
-chown -R www-data /moodle/certs
-chown -R www-data /moodle/moodledata
-chmod -R 770 /moodle/html/moodle
-chmod -R 770 /moodle/certs
-chmod -R 770 /moodle/moodledata
+    # downloading moodle 
+    curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
+    unzip moodle.zip
+    mv moodle-'$moodleVersion' /moodle/html/moodle
 
-# restart Apache
-service apache2 restart 
+    # install Office 365 plugins
+    #if [ "$installOfficePlugins" = "True" ]; then
+            curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/'$moodleVersion'.zip -L -o o365.zip
+            unzip o365.zip
+            cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
+            rm -rf o365-moodle-'$moodleVersion'
+    #fi
+    ' > /tmp/setup-moodle.sh 
+    chmod +x /tmp/setup-moodle.sh
+    /tmp/setup-moodle.sh 
 
-echo /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_bbr --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true > /var/tmp/moodle-install.log 
+    # create cron entry
+    # It is scheduled for once per day. It can be changed as needed.
+    echo '0 0 * * * php /moodle/html/moodle/admin/cli/cron.php > /dev/null 2>&1' > cronjob
+    crontab cronjob
 
-/usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
+    # updapte Apache configuration
+    cp /etc/apache2/apache2.conf apache2.conf.bak
+    sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
+    echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
+
+    #enable ssl 
+    a2enmod rewrite ssl
+    echo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
+
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
+
+    #update virtual site configuration 
+    echo -e '
+    <VirtualHost *:80>
+            #ServerName www.example.com
+            ServerAdmin webmaster@localhost
+            DocumentRoot /moodle/html/moodle
+            #LogLevel info ssl:warn
+            ErrorLog ${APACHE_LOG_DIR}/error.log
+            CustomLog ${APACHE_LOG_DIR}/access.log combined
+            #Include conf-available/serve-cgi-bin.conf
+    </VirtualHost>
+    <VirtualHost *:443>
+            DocumentRoot /moodle/html/moodle
+            ErrorLog ${APACHE_LOG_DIR}/error.log
+            CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+            SSLEngine on
+            SSLCertificateFile /moodle/certs/apache.crt
+            SSLCertificateKeyFile /moodle/certs/apache.key
+            BrowserMatch "MSIE [2-6]" \
+                            nokeepalive ssl-unclean-shutdown \
+                            downgrade-1.0 force-response-1.0
+            BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown        
+
+    </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
+
+    # php config 
+    PhpIni=/etc/php5/apache2/php.ini
+    sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
+    sed -i "s/;opcache.use_cwd = 1/opcache.use_cwd = 1/" $PhpIni
+    sed -i "s/;opcache.validate_timestamps = 1/opcache.validate_timestamps = 1/" $PhpIni
+    sed -i "s/;opcache.save_comments = 1/opcache.save_comments = 1/" $PhpIni
+    sed -i "s/;opcache.enable_file_override = 0/opcache.enable_file_override = 0/" $PhpIni
+    sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
+    sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
+    sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
+
+    chown -R www-data /moodle/html/moodle
+    chown -R www-data /moodle/certs
+    chown -R www-data /moodle/moodledata
+    chmod -R 770 /moodle/html/moodle
+    chmod -R 770 /moodle/certs
+    chmod -R 770 /moodle/moodledata
+
+    # restart Apache
+    service apache2 restart 
+
+    /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
+
+}  > /tmp/install.log
