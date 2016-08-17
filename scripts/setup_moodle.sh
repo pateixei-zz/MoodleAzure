@@ -41,30 +41,55 @@ apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-
 
 # create gluster mount point
 mkdir -p /moodle
- 
-# mount gluster files system
-echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle'  
-mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 # make the moodle directory writable for owner
 chown www-data moodle
 chmod 770 moodle
-
-# create moodledata directory
-mkdir /moodle/moodledata
-chown www-data /moodle/moodledata
-chmod 770 /moodle/moodledata
+ 
+# mount gluster files system
+echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tmp/mount.log 
+mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 # updapte Apache configuration
-cp /etc/apache2/apache2.conf apache2.conf.bak
+cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
 sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
 echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
-#update virtual site configuration 
-sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled/000-default.conf
-
 #enable ssl 
 a2enmod rewrite ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt
+
+#update virtual site configuration 
+echo -e '
+<VirtualHost *:80>
+        #ServerName www.example.com
+        ServerAdmin webmaster@localhost
+        DocumentRoot /moodle/html/moodle
+        #LogLevel info ssl:warn
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        #Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+<VirtualHost *:443>
+        DocumentRoot /moodle/html/moodle
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        SSLEngine on
+        SSLCertificateFile /moodle/certs/apache.crt
+        SSLCertificateKeyFile /moodle/certs/apache.key
+</VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
+
+# php config 
+PhpIni=/etc/php5/apache2/php.ini
+sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
+sed -i "s/;opcache.use_cwd = 1/opcache.use_cwd = 1/" $PhpIni
+sed -i "s/;opcache.validate_timestamps = 1/opcache.validate_timestamps = 1/" $PhpIni
+sed -i "s/;opcache.save_comments = 1/opcache.save_comments = 1/" $PhpIni
+sed -i "s/;opcache.enable_file_override = 0/opcache.enable_file_override = 0/" $PhpIni
+sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
+sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
+sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
 # restart Apache
 service apache2 restart 

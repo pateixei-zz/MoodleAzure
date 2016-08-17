@@ -27,6 +27,8 @@ glusterNode=$2
 glusterVolume=$3 
 moodledbapwd=$4
 # create gluster mount point
+
+
 mkdir -p /moodle
 
 #configure gluster repository & install gluster client
@@ -40,6 +42,19 @@ mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 #create html directory for storing moodle files
 mkdir /moodle/html
+chown -R www-data /moodle/html/moodle
+chmod -R 770 /moodle/html/moodle
+
+# create directory for apache ssl certs
+mkdir /moodle/certs
+chown -R www-data /moodle/certs
+chmod -R 770 /moodle/certs
+
+# create moodledata directory
+mkdir /moodle/moodledata
+chown -R www-data /moodle/moodledata
+chmod -R 770 /moodle/moodledata
+
 # install pre-requisites
 apt-get install -y --fix-missing python-software-properties unzip
 
@@ -52,17 +67,12 @@ apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd p
 
 # install Moodle 
 echo '#!/bin/bash
-mkdir /moodle/html
 cd /tmp
 
 # downloading moodle 
 curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
 unzip moodle.zip
 mv moodle-'$moodleVersion' /moodle/html/moodle
-
-# make the moodle directory writable for owner
-chown -R www-data /moodle/html/moodle
-chmod -R 770 /moodle/html/moodle
 
 # install Office 365 plugins
 #if [ "$installOfficePlugins" = "True" ]; then
@@ -71,14 +81,9 @@ chmod -R 770 /moodle/html/moodle
         cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
         rm -rf o365-moodle-'$moodleVersion'
 #fi
-# create moodledata directory
-mkdir /moodle/moodledata
-chown -R www-data /moodle/moodledata
-chmod -R 770 /moodle/moodledata
 ' > /tmp/setup-moodle.sh 
 chmod +x /tmp/setup-moodle.sh
 /tmp/setup-moodle.sh 
-
 
 # create cron entry
 # It is scheduled for once per day. It can be changed as needed.
@@ -90,40 +95,42 @@ cp /etc/apache2/apache2.conf apache2.conf.bak
 sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
 echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
+#enable ssl 
+a2enmod rewrite ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt
+
 #update virtual site configuration 
-sed -i 's/\/var\/www\/html/\/\moodle\/html\/moodle/g' /etc/apache2/sites-enabled/000-default.conf
+echo -e '
+<VirtualHost *:80>
+        #ServerName www.example.com
+        ServerAdmin webmaster@localhost
+        DocumentRoot /moodle/html/moodle
+        #LogLevel info ssl:warn
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        #Include conf-available/serve-cgi-bin.conf
+</VirtualHost>
+<VirtualHost *:443>
+        DocumentRoot /moodle/html/moodle
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        SSLEngine on
+        SSLCertificateFile /moodle/certs/apache.crt
+        SSLCertificateKeyFile /moodle/certs/apache.key
+
+</VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
+
+# php config 
+PhpIni=/etc/php5/apache2/php.ini
+sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
+sed -i "s/;opcache.use_cwd = 1/opcache.use_cwd = 1/" $PhpIni
+sed -i "s/;opcache.validate_timestamps = 1/opcache.validate_timestamps = 1/" $PhpIni
+sed -i "s/;opcache.save_comments = 1/opcache.save_comments = 1/" $PhpIni
+sed -i "s/;opcache.enable_file_override = 0/opcache.enable_file_override = 0/" $PhpIni
+sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
+sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
+sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
 # restart Apache
 service apache2 restart 
-
-echo -e "
-<?php  // Moodle configuration file
-
-unset($CFG);
-global $CFG;
-$CFG = new stdClass();
-
-$CFG->dbtype    = 'mariadb';
-$CFG->dblibrary = 'native';
-$CFG->dbhost    = '172.18.2.5';
-$CFG->dbname    = 'moodle';
-$CFG->dbuser    = 'moodledba';
-$CFG->dbpass    = '"$moodledbapwd"';
-$CFG->prefix    = 'mdl_';
-$CFG->dboptions = array (
-  'dbpersist' => 0,
-  'dbport' => 3306,
-  'dbsocket' => '',
-);
-
-$CFG->wwwroot   = '';
-$CFG->dataroot  = '/moodle/moodledata';
-$CFG->admin     = 'admin';
-
-$CFG->directorypermissions = 0777;
-
-require_once(dirname(__FILE__) . '/lib/setup.php');
-
-// There is no php closing tag in this file,
-// it is intentional because it prevents trailing whitespace problems!
-" > /moodle/html/moodle/config.php
