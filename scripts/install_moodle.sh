@@ -42,13 +42,13 @@ echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle'
 mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
 #create html directory for storing moodle files
-mkdir /moodle/html
+mkdir -p /moodle/html
 
 # create directory for apache ssl certs
-mkdir /moodle/certs
+mkdir -p /moodle/certs
 
 # create moodledata directory
-mkdir /moodle/moodledata
+mkdir -p /moodle/moodledata
 
 # install pre-requisites
 apt-get install -y --fix-missing python-software-properties unzip
@@ -92,6 +92,8 @@ echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #enable ssl 
 a2enmod rewrite ssl
+echo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
+
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=Sao Paulo/O=IT/CN=$siteFQDN"
 
 #update virtual site configuration 
