@@ -38,7 +38,7 @@
     apt-get -y --force-yes install glusterfs-client mysql-client git 
 
     # mount gluster files system
-    echo 'Installing GlusterFS on '$glusterNode':/'$glusterVolume '/moodle' 
+    echo -e '\n\rInstalling GlusterFS on '$glusterNode':/'$glusterVolume '/moodle\n\r' 
     mount -t glusterfs $glusterNode:/$glusterVolume /moodle
 
     #create html directory for storing moodle files
@@ -94,10 +94,10 @@
     #enable ssl 
     a2enmod rewrite ssl
 
-    echo -e Generating SSL self-signed certificate
+    echo -e "Generating SSL self-signed certificate"
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=SaoPaulo/O=IT/CN=$siteFQDN"
 
-    echo -e \n\rUpdating PHP and site configuration\n\r 
+    echo -e "\n\rUpdating PHP and site configuration\n\r" 
     #update virtual site configuration 
     echo -e '
     <VirtualHost *:80>
@@ -117,9 +117,7 @@
             SSLEngine on
             SSLCertificateFile /moodle/certs/apache.crt
             SSLCertificateKeyFile /moodle/certs/apache.key
-            BrowserMatch "MSIE [2-6]" \
-                            nokeepalive ssl-unclean-shutdown \
-                            downgrade-1.0 force-response-1.0
+            BrowserMatch "MSIE [2-6]" nokeepalive ssl-unclean-shutdown downgrade-1.0 force-response-1.0
             BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown        
 
     </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
@@ -136,9 +134,11 @@
     sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
     # restart Apache
-    echo -e \n\rRestarting Apache2 httpd server\n\r
+    echo -e "\n\rRestarting Apache2 httpd server\n\r"
     service apache2 restart 
 
+    echo -e "sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass="$moodledbapwd" --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$moodledbapwd" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
+    
     sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
 
     chown -R www-data /moodle/html/moodle
