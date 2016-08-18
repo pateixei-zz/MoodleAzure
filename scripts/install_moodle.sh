@@ -67,7 +67,8 @@
     # downloading moodle 
     curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
     unzip moodle.zip
-    mv moodle-'$moodleVersion' /moodle/html/moodle
+    echo -e \n\rMoving moodle files to Gluster\n\r 
+    mv -v moodle-'$moodleVersion' /moodle/html/moodle
 
     # install Office 365 plugins
     #if [ "$installOfficePlugins" = "True" ]; then
@@ -85,17 +86,18 @@
     echo '0 0 * * * php /moodle/html/moodle/admin/cli/cron.php > /dev/null 2>&1' > cronjob
     crontab cronjob
 
-    # updapte Apache configuration
+    # update Apache configuration
     cp /etc/apache2/apache2.conf apache2.conf.bak
     sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
     echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
     #enable ssl 
     a2enmod rewrite ssl
-    echo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=SaoPaulo/O=IT/CN=$siteFQDN"
 
+    echo -e Generating SSL self-signed certificate
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/apache.key -out /moodle/certs/apache.crt -subj "/C=BR/ST=SP/L=SaoPaulo/O=IT/CN=$siteFQDN"
 
+    echo -e \n\rUpdating PHP and site configuration\n\r 
     #update virtual site configuration 
     echo -e '
     <VirtualHost *:80>
@@ -141,8 +143,10 @@
     chmod -R 770 /moodle/moodledata
 
     # restart Apache
+    echo -e \n\rRestarting Apache2 httpd server\n\r
     service apache2 restart 
 
     /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
 
+    echo -e \n\rDone! Installation completed!\n\r
 }  > /tmp/install.log
