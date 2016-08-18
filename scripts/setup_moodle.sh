@@ -38,7 +38,7 @@ apt-get -y --force-yes install glusterfs-client mysql-client git
 apt-get -y install apache2 php5
 
 # install moodle requirements
-apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap
+apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap php5-redis
 
 # create gluster mount point
 mkdir -p /moodle
