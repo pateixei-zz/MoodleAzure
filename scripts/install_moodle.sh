@@ -135,18 +135,18 @@
     sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
     sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
+    # restart Apache
+    echo -e \n\rRestarting Apache2 httpd server\n\r
+    service apache2 restart 
+
+    sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
+
     chown -R www-data /moodle/html/moodle
     chown -R www-data /moodle/certs
     chown -R www-data /moodle/moodledata
     chmod -R 770 /moodle/html/moodle
     chmod -R 770 /moodle/certs
     chmod -R 770 /moodle/moodledata
-
-    # restart Apache
-    echo -e \n\rRestarting Apache2 httpd server\n\r
-    service apache2 restart 
-
-    /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
 
     echo -e \n\rDone! Installation completed!\n\r
 }  > /tmp/install.log
