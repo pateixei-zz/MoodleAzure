@@ -16,6 +16,13 @@
                 "description": "VM size for the nodes"
             }
         },
+        "GlusterVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS2",
+            "metadata": {
+                "description": "VM size for the gluster nodes"
+            }
+        },
         "moodleVersion": {
             "type": "string",
             "defaultValue": "MOODLE_31_STABLE",
@@ -82,7 +89,7 @@
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
         "scaleNumber": 2,
-        "gfsScaleNumber": 4,
+        "gfsScaleNumber": 2,
         "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
@@ -409,7 +416,7 @@
             ],
             "properties": {
                 "hardwareProfile": {
-                    "vmSize": "[parameters('vmSize')]"
+                    "vmSize": "[parameters('GlusterVmSize')]"
                 },
                 "osProfile": {
                     "computerName": "[concat('gfs',variables('vmName'), copyIndex())]",
@@ -437,7 +444,7 @@
                     "dataDisks": [
                         {
                             "name": "datadisk1",
-                            "diskSizeGB": "500",
+                            "diskSizeGB": "400",
                             "lun": 0,
                             "vhd": {
                                 "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/gfs', variables('vmName'), copyIndex(), 'datadisk1.vhd')]"
@@ -446,7 +453,7 @@
                         },
                         {
                             "name": "datadisk2",
-                            "diskSizeGB": "500",
+                            "diskSizeGB": "400",
                             "lun": 1,
                             "vhd": {
                                 "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/gfs', variables('vmName'), copyIndex(), 'datadisk2.vhd')]"

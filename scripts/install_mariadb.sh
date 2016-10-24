@@ -117,7 +117,7 @@ service mysql stop
 
 # create Galera config file
 
-wget https://raw.githubusercontent.com/pateixei/azure-nginx-php-mariadb-cluster/master/files/cluster.cnf > /dev/null
+#wget https://raw.githubusercontent.com/pateixei/azure-nginx-php-mariadb-cluster/master/files/cluster.cnf > /dev/null
 echo -e '[mysqld]
 #mysql settings
 #wsrep_on=ON

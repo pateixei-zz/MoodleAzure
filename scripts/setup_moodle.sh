@@ -26,38 +26,39 @@ glusterNode=$1
 glusterVolume=$2 
 
 # install pre-requisites
-apt-get -y install python-software-properties
+sudo apt-get -y install python-software-properties
 
 #configure gluster repository & install gluster client
-add-apt-repository ppa:gluster/glusterfs-3.7 -y
-apt-get -y update
-apt-get -y --force-yes install glusterfs-client mysql-client git 
+sudo add-apt-repository ppa:gluster/glusterfs-3.7 -y
+sudo apt-get -y update
+sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
 
 # install the LAMP stack
-apt-get -y install apache2 php5
+sudo apt-get -y install apache2 php5
 
 # install moodle requirements
-apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap php5-redis
+sudo apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap php5-redis
 
 # create gluster mount point
-mkdir -p /moodle
+sudo mkdir -p /moodle
 
 # make the moodle directory writable for owner
-chown www-data moodle
-chmod 770 moodle
+sudo chown www-data moodle
+sudo chmod 770 moodle
  
 # mount gluster files system
-echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tmp/mount.log 
-mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-
+sudo echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tmp/mount.log 
+#sudo mount -t glusterfs $glusterNode:/$glusterVolume /moodle
+sudo echo -e '$glusterNode:/$glusterVolume   /moodle         glusterfs       defaults,_netdev,log-level=WARNING,log-file=/var/log/gluster.log 0 0' >> /etc/fstab
+sudo mount -a
 # updapte Apache configuration
-cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
-sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
-echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
+sudo cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
+sudo sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
+sudo echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
 #enable ssl 
-a2enmod rewrite ssl
+sudo a2enmod rewrite ssl
 
 #update virtual site configuration 
 echo -e '
@@ -98,5 +99,5 @@ sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpI
 sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
 
 # restart Apache
-service apache2 restart 
+sudo service apache2 restart 
 
