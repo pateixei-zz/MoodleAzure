@@ -50,7 +50,7 @@ sudo chmod 770 moodle
 # mount gluster files system
 sudo echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tmp/mount.log 
 #sudo mount -t glusterfs $glusterNode:/$glusterVolume /moodle
-sudo echo -e '$glusterNode:/$glusterVolume   /moodle         glusterfs       defaults,_netdev,log-level=WARNING,log-file=/var/log/gluster.log 0 0' >> /etc/fstab
+sudo echo -e '${glusterNode}:/${glusterVolume}   /moodle         glusterfs       defaults,_netdev,log-level=WARNING,log-file=/var/log/gluster.log 0 0' >> /etc/fstab
 sudo mount -a
 # updapte Apache configuration
 sudo cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
