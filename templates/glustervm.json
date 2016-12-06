@@ -159,8 +159,7 @@
                 "displayName": "Gluster Virtual Machine"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmName'),'-nic') ]",
-                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccount') )]"
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmName'),'-nic') ]"
             ],
             "properties": {
                 "hardwareProfile": {
