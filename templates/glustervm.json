@@ -160,8 +160,7 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('vmName'),'-nic') ]",
-                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccount') )]",
-                "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySet') )]"
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccount') )]"
             ],
             "properties": {
                 "hardwareProfile": {
@@ -173,7 +172,7 @@
                     "adminPassword": "[parameters('adminPassword')]"
                 },
                 "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('availabilitySet'))]"
+                    "id": "[resourceId( 'Microsoft.Compute/availabilitySets', parameters('availabilitySet') )]"
                 },
                 "storageProfile": {
                     "imageReference": "[variables('osType')]",
