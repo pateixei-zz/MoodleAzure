@@ -9,7 +9,8 @@
                 "description": "Prefix of storage account name, network, virtual machines, and so on"
             }
         }, 
-        "vmSize" : {
+        "vmSize" 
+        : {
             "type": "string",
             "defaultValue": "Standard_DS2",
             "metadata": {

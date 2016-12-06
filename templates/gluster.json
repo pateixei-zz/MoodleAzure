@@ -1,0 +1,111 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0", 
+ "parameters": {
+        "resPrefix": {
+            "type": "string",
+            "defaultValue": "moodle"
+        }, 
+        "GlusterTshirtSize" : {
+            "type" : "string",
+            "defaultValue": "Small",
+            "allowedValues": [
+                "Small",
+                "Medium",
+                "Large"
+            ]
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "azureadmin",
+            "metadata": {
+                "description": "ssh user name"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "ssh password"
+            }
+        }        
+  },
+  "variables": {
+        "rpfx" : "[tolower(parameters('resPrefix'))]",
+        "vnetName": "[concat(variables('rpfx'),'-vnet')]",
+        "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
+
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "SubnetSan": "[concat('san-',variables('rpfx'),'-subnet')]",
+        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]"
+
+  },     
+  "resources": 
+  [        
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccount')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "Gluster Storage Account"
+            },
+            "properties": {
+                "accountType": "Premium_LRS"
+            }
+        },
+        {
+            "name": "[concat('gfs-',variables('rpfx'),'-as')]",
+            "type": "Microsoft.Compute/availabilitySets",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [],
+            "tags": {
+                "displayName": "Gluster Availability Set"
+            },
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 3
+            }
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "GlusterNode01",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "resPrefix": { "value": "[variables('rpfx')]" }, 
+                    "GlusterTshirtSize" : {"value": "parameters('GlusterTshirtSize')"},
+                    "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm01')]" },
+                    "adminUsername": {"value": "[parameters('adminUserName')]" },
+                    "adminPassword": {"value": "[parameters('adminPassword')]"},
+                    "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
+                }
+            }            
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "GlusterNode02",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "resPrefix": { "value": "[variables('rpfx')]" }, 
+                    "GlusterTshirtSize" : {"value": "parameters('GlusterTshirtSize')"},
+                    "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm02')]" },
+                    "adminUsername": {"value": "[parameters('adminUserName')]" },
+                    "adminPassword": {"value": "[parameters('adminPassword')]"},
+                    "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
+                }
+            }            
+        }                       
+    ]
+}

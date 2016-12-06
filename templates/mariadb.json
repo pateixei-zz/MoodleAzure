@@ -1,0 +1,217 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[concat('db', variables('storageAcctName'), copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "DatabaseStorageAccount"
+            },
+            "copy": {
+                "name": "db",
+                "count": "[variables('scaleNumber')]"
+            },
+            "properties": {
+                "accountType": "Premium_LRS"
+            }
+        },
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat('dbnic', copyindex())]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "dbNic"
+            },
+            "copy": {
+                "name": "db",
+                "count": "[variables('scaleNumber')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/loadBalancers/', 'mariadbLb')]",
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipcfg_db",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "[concat(variables('dbVmIPPrefix'), copyindex())]",
+                            "subnet": {
+                                "id": "[variables('dbSubnetRef')]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'), '/backendAddressPools/mariadb-be')]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat('db',variables('vmName'), copyindex())]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "dbVms"
+            },
+            "copy": {
+                "name": "db",
+                "count": "[variables('scaleNumber')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', 'dbnic', copyindex())]",
+                "[concat('Microsoft.Storage/storageAccounts/', 'db', variables('storageAcctName'), copyindex())]",
+                "[concat('Microsoft.Compute/availabilitySets/', 'dbAvSet')]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets','dbAvSet')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat('db',variables('vmName'), copyIndex())]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('osImagePublisher')]",
+                        "offer": "[variables('osImageOffer')]",
+                        "sku": "[variables('osImageSKU')]",
+                        "version": "[variables('osImageVersion')]"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('storageAcctName'), copyindex(), '.blob.core.windows.net/vhds/', 'db',variables('vmName'), copyIndex(), 'osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "datadisk1",
+                            "diskSizeGB": "500",
+                            "lun": 0,
+                            "vhd": {
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk1.vhd')]"
+                            },
+                            "createOption": "Empty"
+                        },
+                        {
+                            "name": "datadisk2",
+                            "diskSizeGB": "500",
+                            "lun": 1,
+                            "vhd": {
+                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk2.vhd')]"
+                            },
+                            "createOption": "Empty"
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('dbNic', copyindex()))]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "name": "install_mariadb",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2015-06-15",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/','db',variables('vmName'),copyIndex())]"
+                    ],
+                    "tags": {
+                        "displayName": "install_mariadb"
+                    },
+                    "properties": {
+                        "publisher": "Microsoft.OSTCExtensions",
+                        "type": "CustomScriptForLinux",
+                        "typeHandlerVersion": "1.4",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "fileUris": [
+                                "[concat(variables('mariadbScriptLocation'),variables('install_mariadbScriptFileName'))]"
+                            ],
+                            "commandToExecute": "[concat('bash ', variables('install_mariadbScriptFileName'),' ', variables('nodeDBCount'), ' ', parameters('mySQLrootPassword'),' ',variables('subnetIPBase'), ' ', parameters('mySQLuserPassword'))]"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "name": "mariadblb",
+            "type": "Microsoft.Network/loadBalancers",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+            ],
+            "properties": {
+                "frontendIPConfigurations": [
+                    {
+                        "name": "mariadb-fipc",
+                        "properties": {
+                            "privateIPAllocationMethod": "Static",
+                            "privateIPAddress": "172.18.2.5",
+                            "subnet": {
+                                "id": "[variables('dbsubnetRef')]"
+                            }
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "mariadb-be"
+                    }
+                ],
+                "loadBalancingRules": [
+                    {
+                        "name": "MariaDbListener",
+                        "properties": {
+                            "backendAddressPool": {
+                                "id": "[variables('mariadbbe')]"
+                            },
+                            "frontendIPConfiguration": {
+                                "id": "[variables('mariadbfipc')]"
+                            },
+                            "probe": {
+                                "id": "[variables('mariadbprobe')]"
+                            },
+                            "protocol": "tcp",
+                            "frontendPort": 3306,
+                            "backendPort": 3306,
+                            "enableFloatingIP": false
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "mariadb-probe",
+                        "properties": {
+                            "protocol": "tcp",
+                            "port": 3306,
+                            "intervalInSeconds": "5",
+                            "numberOfProbes": "6"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

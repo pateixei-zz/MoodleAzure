@@ -1,0 +1,278 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcesPrefix": {
+            "type": "string",
+            "defaultValue": "azmoodle",
+            "metadata": {
+                "description": "Prefix of storage account name, network, virtual machines, and so on"
+            }
+        }, 
+        "moodleVersion": {
+            "type": "string",
+            "defaultValue": "MOODLE_31_STABLE",
+            "allowedValues": [
+                "MOODLE_31_STABLE",
+                "MOODLE_30_STABLE",
+                "MOODLE_29_STABLE"
+            ],
+            "metadata": {
+                "description": "The Moodle version you want to install."
+            }
+        },
+        "vmSize" 
+        : {
+            "type": "string",
+            "defaultValue": "Standard_DS2",
+            "metadata": {
+                "description": "VM size for the nodes"
+            }
+        },
+        "GlusterVmSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS2",
+            "metadata": {
+                "description": "VM size for the gluster nodes"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "azureadmin",
+            "metadata": {
+                "description": "ssh user name"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "ssh password"
+            }
+        },
+        "mySQLuserPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "my sql regular user password"
+            }
+        },
+        "mySQLrootPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "my sql root user password"
+            }
+        }
+    },
+    "variables": {
+        "ids": {
+          "adNicId": "[resourceId('Microsoft.Network/networkInterfaces',variables('adPDCNicName'))]",
+          "rdplbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').rdpLBName)]",
+          "sqllbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').sqlLBName)]"
+        },        
+        "baseTemplateUrl" : "https://raw.githubusercontent.com/pateixei/MoodleAzure",
+        "storageAcctName": "[concat(parameters('resourcesPrefix'),'sa')]",
+        "jboxpipName" : "[concat('jb-',parameters('resourcesPrefix'))]",
+        "vmName": "[concat(parameters('resourcesPrefix'),'vm')]",
+        "SubnetWebRef": "[concat(variables('vnetID'), '/subnets/', variables('SubnetWeb'))]",
+        "GfsVmIPPrefix": "172.18.1.1",
+        "volumeName": "data",
+        "dbVmIPPrefix": "172.18.2.1",
+        "nicName": "vmssnic",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "webSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetWeb'))]",
+        "sanSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
+        "dbSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
+        "osImagePublisher": "Canonical",
+        "osImageOffer": "UbuntuServer",
+        "osImageSKU": "14.04.4-LTS",
+        "osImageVersion": "latest",
+        "GlusterSetupCmd": "bash azuregfs.sh",
+        "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
+        "scaleNumber": 2,
+        "gfsScaleNumber": 2,
+        "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
+        "JumpVmOSDiskName": "JumpVmOSDisk",
+        "JumpVmVmSize": "Standard_D1",
+        "JumpVmStorageAccountContainerName": "vhds",
+        "natPoolName": "natpool",
+        "bePoolName": "bePool",
+        "natStartPort": 50000,
+        "natEndPort": 50119,
+        "natBackendPort": 22,
+        "ilbNicName": "ilbnic",
+        "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
+        "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/ipcfg_lb')]",
+        "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
+        "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",        
+        "storageApiVersion": "2015-06-15",
+        "accountid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('diagnosticsStorageAccountResourceGroup'),'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]",
+        "osType": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.4-LTS",
+            "version": "latest"
+        },
+        "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webpip')]",
+        "siteFQDN" : "", 
+        "moodleScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
+        "install_moodleScriptFileName": "install_moodle.sh",
+        "setup_moodleScriptFileName": "setup_moodle.sh",
+        "mariadbScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
+        "install_mariadbScriptFileName": "install_mariadb.sh",
+        "nodeDBCount" : 2,
+        "subnetIPBase": "172.18.2.",
+        "mariadbbe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/backendAddressPools/mariadb-be')]",
+        "mariadbfipc": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/frontendIPConfigurations/mariadb-fipc')]",
+        "mariadbprobe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/probes/mariadb-probe')]"    
+    },
+    "resources": 
+    [
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "vNetTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "vnetName" : { "value": "xxxxx" }
+                }
+            }            
+        },        {
+            "apiVersion": "2015-01-01",
+            "name" : "glusterTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountName" : { "value": "xxxxx" },
+                    "GlusterVMSize" : { "value": "xxxxx" }
+                }
+            }            
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "MariaDbTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountName" : { "value": "xxxxx" },
+                    "MariaDbVMSize" : { "value": "xxxxx" }
+                }
+            }            
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "ControllerTemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "https://base.link/",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "storageAccountName" : { "value": "xxxxx" },
+                    "ControllerVMSize" : { "value": "xxxxx" }
+                }
+            }            
+        },        
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2015-05-01-preview",
+            "copy": {
+                "name": "vmss",
+                "count": 5
+            },
+            "location": "[resourceGroup().location]",
+            "name": "[concat('vmss',variables('storageAcctName'), copyIndex())]",
+            "properties": {
+                "accountType": "Standard_LRS"
+            },
+            "tags": {
+                "displayName": "VmssStorageAccount"
+            }
+        },
+        {
+            "name": "[variables('SharedStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [],
+            "tags": {
+                "displayName": "SharedStorageAccount"
+            },
+            "properties": {
+                "accountType": "Standard_LRS"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat('gfs',variables('vmName'), copyindex(), '/setupGluster')]",
+            "apiVersion": "2015-05-01-preview",
+            "tags": {
+                "displayName": "GfsVmExtension"
+            },
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "gfs",
+                "count": "[variables('gfsScaleNumber')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/gfs', variables('vmName'), copyindex())]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.OSTCExtensions",
+                "type": "CustomScriptForLinux",
+                "typeHandlerVersion": "1.3",
+                "settings": {
+                    "fileUris": [
+                        "[variables('customScriptFilePath')]"
+                    ],
+                    "commandToExecute": "[concat(variables('GlusterSetupCmd'), ' gfs', variables('vmName'), ' ', variables('GfsVmIPPrefix'), ' ', variables('volumeName'), ' ', copyindex(), ' ', variables('GfsScaleNumber'))]"
+                }
+            }
+        },
+
+        {
+            "name": "GfsAvSet",
+            "type": "Microsoft.Compute/availabilitySets",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [],
+            "tags": {
+                "displayName": "GfsAvSet"
+            },
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 3
+            }
+        },
+        {
+            "name": "dbAvSet",
+            "type": "Microsoft.Compute/availabilitySets",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [],
+            "tags": {
+                "displayName": "dbAvSet"
+            },
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 3
+            }
+        }
+
+    ]
+}
