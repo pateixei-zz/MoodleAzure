@@ -161,7 +161,7 @@
             "dependsOn": [
                 "[concat('Microsoft.Network/networkInterfaces/', parameters('vmName'),'-nic') ]",
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccount') )]",
-                "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySet')]"
+                "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySet') )]"
             ],
             "properties": {
                 "hardwareProfile": {
