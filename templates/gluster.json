@@ -36,7 +36,10 @@
 
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetSan": "[concat('san-',variables('rpfx'),'-subnet')]",
-        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]"
+        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
+
+        "baseTemplate" : "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/"
+
 
   },     
   "resources": 
@@ -74,12 +77,12 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "https://base.link/",
+                    "uri" : "[concat(variables('baseTemplate'),'templates/glustervm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "resPrefix": { "value": "[variables('rpfx')]" }, 
-                    "GlusterTshirtSize" : {"value": "parameters('GlusterTshirtSize')"},
+                    "GlusterTshirtSize" : {"value": "[parameters('GlusterTshirtSize')]"},
                     "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm01')]" },
                     "adminUsername": {"value": "[parameters('adminUserName')]" },
                     "adminPassword": {"value": "[parameters('adminPassword')]"},
@@ -94,12 +97,12 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "https://base.link/",
+                    "uri" : "[concat(variables('baseTemplate'),'templates/glustervm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
                     "resPrefix": { "value": "[variables('rpfx')]" }, 
-                    "GlusterTshirtSize" : {"value": "parameters('GlusterTshirtSize')"},
+                    "GlusterTshirtSize" : {"value": "[parameters('GlusterTshirtSize')]"},
                     "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm02')]" },
                     "adminUsername": {"value": "[parameters('adminUserName')]" },
                     "adminPassword": {"value": "[parameters('adminPassword')]"},

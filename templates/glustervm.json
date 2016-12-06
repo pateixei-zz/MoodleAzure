@@ -131,7 +131,7 @@
         {
             "apiVersion": "2015-05-01-preview",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat(paramaters('vmName'),'-nic')]",
+            "name": "[concat(parameters('vmName'),'-nic')]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "Gluster VM NIC"
@@ -153,13 +153,13 @@
         {
             "apiVersion": "2015-06-15",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[paramaters('vmName')]",
+            "name": "[parameters('vmName')]",
             "location": "[resourceGroup().location]",
             "tags": {
                 "displayName": "Gluster Virtual Machine"
             },
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', concat(paramaters('vmName')'-nic') )]",
+                "[concat('Microsoft.Network/networkInterfaces/', concat(parameters('vmName')'-nic') )]",
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccount') )]",
                 "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySet')]"
             ],
@@ -168,7 +168,7 @@
                     "vmSize": "[variables('GlusterTshirt').vmSku]"
                 },
                 "osProfile": {
-                    "computerName": "[paramaters('vmName')]",
+                    "computerName": "[parameters('vmName')]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]"
                 },
