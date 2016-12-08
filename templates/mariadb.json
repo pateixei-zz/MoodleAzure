@@ -42,7 +42,7 @@
         "storageAccount": "[concat('db',variables('rpfx'),'sa')]",
 
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
-        "SubnetDb": "[concat('db-',variables('rpfx'),'-subnet')]",
+        "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
         "SubnetDbRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]"
   },     
   "resources": 
