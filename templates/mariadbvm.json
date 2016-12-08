@@ -26,9 +26,9 @@
         "vnetName": "[concat(variables('rpfx'),'-vnet')]",
         "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
 
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "vnetid": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
-        "SubnetDbRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
+        "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]",
 
         "MariaDbSizeSmall": {
            "vmSku": "Standard_DS2_v2",
@@ -143,7 +143,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
-                                "id": "[resourceid(variables('SubnetDbRef'))]"
+                                "id": "[variables('SubnetDbRef')]"
                             }
                         }
                     }
