@@ -80,9 +80,6 @@
             "tags": {
                 "displayName": "MariaDb Internal Load Balancer"
             },            
-            "dependsOn": [
-                "[resourceid('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
-            ],
             "properties": {
                 "frontendIPConfigurations": [
                     {
@@ -90,7 +87,7 @@
                         "properties": {
                             "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
-                                "id": "[variables('dbsubnetRef')]"
+                                "id": "[variables('subnetDbRef')]"
                             }
                         }
                     }
@@ -140,7 +137,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "[concat(parameters('baseTemplate'),'templates/MariaDbvm.json')]",
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/mariadbvm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -164,7 +161,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "[concat(parameters('baseTemplate'),'templates/MariaDbvm.json')]",
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/mariadbvm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
