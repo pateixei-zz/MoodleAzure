@@ -68,7 +68,7 @@
           "rdplbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').rdpLBName)]",
           "sqllbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbSettings').sqlLBName)]"
         },        
-        "baseTemplateUrl" : "https://raw.githubusercontent.com/pateixei/MoodleAzure",
+        "baseTemplateUrl" : "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/",
         "storageAcctName": "[concat(parameters('resourcesPrefix'),'sa')]",
         "jboxpipName" : "[concat('jb-',parameters('resourcesPrefix'))]",
         "vmName": "[concat(parameters('resourcesPrefix'),'vm')]",
@@ -79,16 +79,13 @@
         "nicName": "vmssnic",
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "webSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetWeb'))]",
-        "sanSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
         "dbSubnetRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
-        "osImagePublisher": "Canonical",
-        "osImageOffer": "UbuntuServer",
-        "osImageSKU": "14.04.4-LTS",
-        "osImageVersion": "latest",
+
         "GlusterSetupCmd": "bash azuregfs.sh",
         "customScriptFilePath": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/gluster-file-system/azuregfs.sh",
+
         "scaleNumber": 2,
-        "gfsScaleNumber": 2,
+
         "SharedStorageAccountName": "[concat(variables('storageAcctName'), uniqueString(resourceGroup().id))]",
         "JumpVmOSDiskName": "JumpVmOSDisk",
         "JumpVmVmSize": "Standard_D1",
@@ -102,15 +99,11 @@
         "lbID": "[resourceId('Microsoft.Network/loadBalancers','lbWeb')]",
         "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/ipcfg_lb')]",
         "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
-        "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",        
+        "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/', variables('bePoolName'))]",   
+
         "storageApiVersion": "2015-06-15",
         "accountid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',variables('diagnosticsStorageAccountResourceGroup'),'/providers/','Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]",
-        "osType": {
-            "publisher": "Canonical",
-            "offer": "UbuntuServer",
-            "sku": "14.04.4-LTS",
-            "version": "latest"
-        },
+
         "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses','webpip')]",
         "siteFQDN" : "", 
         "moodleScriptLocation": "https://raw.githubusercontent.com/pateixei/MoodleAzure/master/scripts/",
@@ -245,20 +238,6 @@
             }
         },
 
-        {
-            "name": "GfsAvSet",
-            "type": "Microsoft.Compute/availabilitySets",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2015-06-15",
-            "dependsOn": [],
-            "tags": {
-                "displayName": "GfsAvSet"
-            },
-            "properties": {
-                "platformUpdateDomainCount": 5,
-                "platformFaultDomainCount": 3
-            }
-        },
         {
             "name": "dbAvSet",
             "type": "Microsoft.Compute/availabilitySets",

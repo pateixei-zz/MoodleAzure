@@ -1,0 +1,199 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0", 
+ "parameters": {
+        "resPrefix": {
+            "type": "string"
+        }, 
+        "MariaDbTshirtSize" : {
+            "type" : "string"
+        },
+        "vmName": {
+            "type": "string"
+        },
+        "adminUsername": {
+            "type": "string"
+        }, 
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "availabilitySet": {
+            "type": "string"
+        }               
+  },
+  "variables": {
+        "rpfx" : "[tolower(parameters('resPrefix'))]",
+        "vnetName": "[concat(variables('rpfx'),'-vnet')]",
+        "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
+
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "SubnetDb": "[concat('db-',variables('rpfx'),'-subnet')]",
+        "SubnetDbRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]",
+
+        "MariaDbSizeSmall": {
+           "vmSku": "Standard_DS2_v2",
+            "disks": [
+                {
+                    "name": "datadisk1",
+                    "diskSizeGB": "128",
+                    "lun": 0,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/', parameters('vmName'),'-', uniqueString(parameters('vmName')), '-disk1.vhd')]"
+                    },
+                    "createOption": "Empty"
+                },
+                {
+                    "name": "datadisk2",
+                    "diskSizeGB": "128",
+                    "lun": 1,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/', parameters('vmName'),'-', uniqueString(parameters('vmName')), '-disk2.vhd')]"
+                    },
+                    "createOption": "Empty"
+                },
+                {
+                    "name": "datadisk3",
+                    "diskSizeGB": "128",
+                    "lun": 1,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/', parameters('vmName'),'-', uniqueString(parameters('vmName')), '-disk3.vhd')]"
+                    },
+                    "createOption": "Empty"
+                },
+                {
+                    "name": "datadisk4",
+                    "diskSizeGB": "128",
+                    "lun": 1,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/', parameters('vmName'),'-', uniqueString(parameters('vmName')), '-disk4.vhd')]"
+                    },
+                    "createOption": "Empty"
+                }                                
+            ]
+        },
+                
+        "MariaDbSizeMedium": {
+           "vmSku": "Standard_DS3_v2",
+           "disks": [
+                {
+                    "name": "datadisk1",
+                    "diskSizeGB": "512",
+                    "lun": 0,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/gfs-',variables('rpfx'),'-', uniqueString(parameters('vmName')), '-disk1.vhd')]"
+                    },
+                    "createOption": "Empty"
+                },
+                {
+                    "name": "datadisk2",
+                    "diskSizeGB": "512",
+                    "lun": 1,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/gfs-',variables('rpfx'),'-', uniqueString(parameters('vmName')), '-disk2.vhd')]"
+                    },
+                    "createOption": "Empty"
+                }
+            ]           
+        },         
+        "MariaDbSizeLarge": {
+           "vmSku": "Standard_DS4_v2",
+           "disks": [
+                {
+                    "name": "datadisk1",
+                    "diskSizeGB": "1023",
+                    "lun": 0,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/gfs-',variables('rpfx'),'-', uniqueString(parameters('vmName')), '-disk1.vhd')]"
+                    },
+                    "createOption": "Empty"
+                },
+                {
+                    "name": "datadisk2",
+                    "diskSizeGB": "1023",
+                    "lun": 1,
+                    "vhd": {
+                        "uri": "[concat('http://', variables('storageAccount'),'.blob.core.windows.net/vhds/gfs-',variables('rpfx'),'-', uniqueString(parameters('vmName')), '-disk2.vhd')]"
+                    },
+                    "createOption": "Empty"
+                }
+            ]           
+        },            
+        "osType": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "14.04.4-LTS",
+            "version": "latest"
+        },
+        "MariaDbTshirt" : "[variables(concat('MariaDbSize', parameters('MariaDbTshirtSize')))]"
+  },     
+  "resources": 
+  [        
+        {
+            "apiVersion": "2015-05-01-preview",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('vmName'),'-nic')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "MariaDb VM NIC"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipcfgdb",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('SubnetDbRef')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vmName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "MariaDb Virtual Machine"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', parameters('vmName'),'-nic') ]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[variables('MariaDbTshirt').vmSku]"
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "availabilitySet": {
+                    "id": "[resourceId( 'Microsoft.Compute/availabilitySets', parameters('availabilitySet') )]"
+                },
+                "storageProfile": {
+                    "imageReference": "[variables('osType')]",
+
+                    "osDisk": {
+                        "name": "osdisk",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('storageAccount'), '.blob.core.windows.net/vhds/' , parameters('vmName'), '-osdisk.vhd')]"
+                        },
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": "[variables('MariaDbTshirt').disks]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'),'-nic') )]"
+                        }
+                    ]
+                }
+            }
+        }                
+    ]
+}

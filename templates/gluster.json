@@ -27,7 +27,14 @@
             "metadata": {
                 "description": "ssh password"
             }
-        }        
+        },
+        "baseTemplate": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/",
+            "metadata": {
+                "description": "URL where templates are located"
+            }
+        }                
   },
   "variables": {
         "rpfx" : "[tolower(parameters('resPrefix'))]",
@@ -36,11 +43,7 @@
 
         "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetSan": "[concat('san-',variables('rpfx'),'-subnet')]",
-        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]",
-
-        "baseTemplate" : "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/"
-
-
+        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]"
   },     
   "resources": 
   [        
@@ -77,7 +80,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "[concat(variables('baseTemplate'),'templates/glustervm.json')]",
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/glustervm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -88,7 +91,11 @@
                     "adminPassword": {"value": "[parameters('adminPassword')]"},
                     "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
                 }
-            }            
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/gfs-',variables('rpfx'),'-as')]",
+                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"                
+            ]                          
         },
         {
             "apiVersion": "2015-01-01",
@@ -97,7 +104,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri" : "[concat(variables('baseTemplate'),'templates/glustervm.json')]",
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/glustervm.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -108,7 +115,11 @@
                     "adminPassword": {"value": "[parameters('adminPassword')]"},
                     "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
                 }
-            }            
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/gfs-',variables('rpfx'),'-as')]",
+                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"
+            ]                         
         }                       
     ]
 }

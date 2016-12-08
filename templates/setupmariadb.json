@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+        {
+            "name": "install_mariadb",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/','db',variables('vmName'),copyIndex())]"
+            ],
+            "tags": {
+                "displayName": "install_mariadb"
+            },
+            "properties": {
+                "publisher": "Microsoft.OSTCExtensions",
+                "type": "CustomScriptForLinux",
+                "typeHandlerVersion": "1.4",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[concat(variables('mariadbScriptLocation'),variables('install_mariadbScriptFileName'))]"
+                    ],
+                    "commandToExecute": "[concat('bash ', variables('install_mariadbScriptFileName'),' ', variables('nodeDBCount'), ' ', parameters('mySQLrootPassword'),' ',variables('subnetIPBase'), ' ', parameters('mySQLuserPassword'))]"
+                }
+            }
+        }
+    ]
+}

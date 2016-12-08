@@ -1,164 +1,86 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "resources": [
+    "contentVersion": "1.0.0.0", 
+ "parameters": {
+        "resPrefix": {
+            "type": "string",
+            "defaultValue": "moodle"
+        }, 
+        "MariaDbTshirtSize" : {
+            "type" : "string",
+            "defaultValue": "Small",
+            "allowedValues": [
+                "Small",
+                "Medium",
+                "Large"
+            ]
+        },
+        "adminUsername": {
+            "type": "string",
+            "defaultValue": "azureadmin",
+            "metadata": {
+                "description": "ssh user name"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "ssh password"
+            }
+        },
+        "baseTemplate": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/",
+            "metadata": {
+                "description": "URL where templates are located"
+            }
+        }                
+  },
+  "variables": {
+        "rpfx" : "[tolower(parameters('resPrefix'))]",
+        "vnetName": "[concat(variables('rpfx'),'-vnet')]",
+        "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
+
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "SubnetDb": "[concat('db-',variables('rpfx'),'-subnet')]",
+        "SubnetDbRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]"
+  },     
+  "resources": 
+  [        
         {
             "type": "Microsoft.Storage/storageAccounts",
-            "name": "[concat('db', variables('storageAcctName'), copyIndex())]",
+            "name": "[variables('storageAccount')]",
             "apiVersion": "2015-06-15",
             "location": "[resourceGroup().location]",
             "tags": {
-                "displayName": "DatabaseStorageAccount"
-            },
-            "copy": {
-                "name": "db",
-                "count": "[variables('scaleNumber')]"
+                "displayName": "MariaDb Storage Account"
             },
             "properties": {
                 "accountType": "Premium_LRS"
             }
         },
         {
-            "apiVersion": "2015-05-01-preview",
-            "type": "Microsoft.Network/networkInterfaces",
-            "name": "[concat('dbnic', copyindex())]",
+            "name": "[concat('db-',variables('rpfx'),'-as')]",
+            "type": "Microsoft.Compute/availabilitySets",
             "location": "[resourceGroup().location]",
+            "apiVersion": "2015-06-15",
+            "dependsOn": [],
             "tags": {
-                "displayName": "dbNic"
+                "displayName": "MariaDb Availability Set"
             },
-            "copy": {
-                "name": "db",
-                "count": "[variables('scaleNumber')]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Network/loadBalancers/', 'mariadbLb')]",
-                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
-            ],
             "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipcfg_db",
-                        "properties": {
-                            "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "[concat(variables('dbVmIPPrefix'), copyindex())]",
-                            "subnet": {
-                                "id": "[variables('dbSubnetRef')]"
-                            },
-                            "loadBalancerBackendAddressPools": [
-                                {
-                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'), '/backendAddressPools/mariadb-be')]"
-                                }
-                            ]
-                        }
-                    }
-                ]
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 3
             }
-        },
-        {
-            "apiVersion": "2015-05-01-preview",
-            "type": "Microsoft.Compute/virtualMachines",
-            "name": "[concat('db',variables('vmName'), copyindex())]",
-            "location": "[resourceGroup().location]",
-            "tags": {
-                "displayName": "dbVms"
-            },
-            "copy": {
-                "name": "db",
-                "count": "[variables('scaleNumber')]"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', 'dbnic', copyindex())]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'db', variables('storageAcctName'), copyindex())]",
-                "[concat('Microsoft.Compute/availabilitySets/', 'dbAvSet')]"
-            ],
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "[parameters('vmSize')]"
-                },
-                "availabilitySet": {
-                    "id": "[resourceId('Microsoft.Compute/availabilitySets','dbAvSet')]"
-                },
-                "osProfile": {
-                    "computerName": "[concat('db',variables('vmName'), copyIndex())]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "[variables('osImagePublisher')]",
-                        "offer": "[variables('osImageOffer')]",
-                        "sku": "[variables('osImageSKU')]",
-                        "version": "[variables('osImageVersion')]"
-                    },
-                    "osDisk": {
-                        "name": "osdisk",
-                        "vhd": {
-                            "uri": "[concat('http://',variables('storageAcctName'), copyindex(), '.blob.core.windows.net/vhds/', 'db',variables('vmName'), copyIndex(), 'osdisk.vhd')]"
-                        },
-                        "caching": "ReadWrite",
-                        "createOption": "FromImage"
-                    },
-                    "dataDisks": [
-                        {
-                            "name": "datadisk1",
-                            "diskSizeGB": "500",
-                            "lun": 0,
-                            "vhd": {
-                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk1.vhd')]"
-                            },
-                            "createOption": "Empty"
-                        },
-                        {
-                            "name": "datadisk2",
-                            "diskSizeGB": "500",
-                            "lun": 1,
-                            "vhd": {
-                                "uri": "[concat('http://', variables('storageAcctName'), copyindex(),'.blob.core.windows.net/vhds/', 'db', variables('vmName'), copyIndex(), 'datadisk2.vhd')]"
-                            },
-                            "createOption": "Empty"
-                        }
-                    ]
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces',concat('dbNic', copyindex()))]"
-                        }
-                    ]
-                }
-            },
-            "resources": [
-                {
-                    "name": "install_mariadb",
-                    "type": "extensions",
-                    "location": "[resourceGroup().location]",
-                    "apiVersion": "2015-06-15",
-                    "dependsOn": [
-                        "[concat('Microsoft.Compute/virtualMachines/','db',variables('vmName'),copyIndex())]"
-                    ],
-                    "tags": {
-                        "displayName": "install_mariadb"
-                    },
-                    "properties": {
-                        "publisher": "Microsoft.OSTCExtensions",
-                        "type": "CustomScriptForLinux",
-                        "typeHandlerVersion": "1.4",
-                        "autoUpgradeMinorVersion": true,
-                        "settings": {
-                            "fileUris": [
-                                "[concat(variables('mariadbScriptLocation'),variables('install_mariadbScriptFileName'))]"
-                            ],
-                            "commandToExecute": "[concat('bash ', variables('install_mariadbScriptFileName'),' ', variables('nodeDBCount'), ' ', parameters('mySQLrootPassword'),' ',variables('subnetIPBase'), ' ', parameters('mySQLuserPassword'))]"
-                        }
-                    }
-                }
-            ]
         },
         {
             "apiVersion": "2015-06-15",
             "name": "mariadblb",
             "type": "Microsoft.Network/loadBalancers",
             "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "MariaDb Internal Load Balancer"
+            },            
             "dependsOn": [
                 "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
             ],
@@ -167,8 +89,7 @@
                     {
                         "name": "mariadb-fipc",
                         "properties": {
-                            "privateIPAllocationMethod": "Static",
-                            "privateIPAddress": "172.18.2.5",
+                            "privateIPAllocationMethod": "Dynamic",
                             "subnet": {
                                 "id": "[variables('dbsubnetRef')]"
                             }
@@ -212,6 +133,54 @@
                     }
                 ]
             }
-        }
+        },        
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "MariaDbNode01",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/MariaDbvm.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "resPrefix": { "value": "[variables('rpfx')]" }, 
+                    "MariaDbTshirtSize" : {"value": "[parameters('MariaDbTshirtSize')]"},
+                    "vmName": {"value": "[concat('db-',variables('rpfx'),'-vm01')]" },
+                    "adminUsername": {"value": "[parameters('adminUserName')]" },
+                    "adminPassword": {"value": "[parameters('adminPassword')]"},
+                    "availabilitySet":  {"value": "[concat('db-',variables('rpfx'),'-as')]"}
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/db-',variables('rpfx'),'-as')]",
+                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"                
+            ]                          
+        },
+        {
+            "apiVersion": "2015-01-01",
+            "name" : "MariaDbNode02",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri" : "[concat(parameters('baseTemplate'),'templates/MariaDbvm.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "resPrefix": { "value": "[variables('rpfx')]" }, 
+                    "MariaDbTshirtSize" : {"value": "[parameters('MariaDbTshirtSize')]"},
+                    "vmName": {"value": "[concat('db-',variables('rpfx'),'-vm02')]" },
+                    "adminUsername": {"value": "[parameters('adminUserName')]" },
+                    "adminPassword": {"value": "[parameters('adminPassword')]"},
+                    "availabilitySet":  {"value": "[concat('db-',variables('rpfx'),'-as')]"}
+                }
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/db-',variables('rpfx'),'-as')]",
+                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"
+            ]                         
+        }                       
     ]
 }
