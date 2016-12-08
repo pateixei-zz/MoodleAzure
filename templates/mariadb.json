@@ -40,10 +40,9 @@
         "rpfx" : "[tolower(parameters('resPrefix'))]",
         "vnetName": "[concat(variables('rpfx'),'-vnet')]",
         "storageAccount": "[concat('db',variables('rpfx'),'sa')]",
-
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
+        "vnetid": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
-        "SubnetDbRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetDb'))]"
+        "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]"
   },     
   "resources": 
   [        
@@ -82,7 +81,7 @@
                 "displayName": "MariaDb Internal Load Balancer"
             },            
             "dependsOn": [
-                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+                "[resourceid('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
             ],
             "properties": {
                 "frontendIPConfigurations": [
