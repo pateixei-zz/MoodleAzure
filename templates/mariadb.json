@@ -42,7 +42,9 @@
         "storageAccount": "[concat('db',variables('rpfx'),'sa')]",
         "vnetid": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
-        "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]"
+        "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]",
+        "mariadblb": "[resourceId('Microsoft.Network/loadBalancers','mariadblb')]",        
+        "mariadbbe": "[concat(variables('mariadblb'),'/backendAddressPools/mariadbbe')]"
   },     
   "resources": 
   [        
@@ -94,7 +96,7 @@
                 ],
                 "backendAddressPools": [
                     {
-                        "name": "mariadb-be"
+                        "name": "mariadbbe"
                     }
                 ],
                 "loadBalancingRules": [
