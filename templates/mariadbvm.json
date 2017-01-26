@@ -24,8 +24,7 @@
   "variables": {
         "rpfx" : "[tolower(parameters('resPrefix'))]",
         "vnetName": "[concat(variables('rpfx'),'-vnet')]",
-        "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
-
+        "storageAccount": "[concat('db',variables('rpfx'),'sa')]",
         "vnetid": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
         "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
         "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]",
