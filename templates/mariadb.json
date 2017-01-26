@@ -44,7 +44,9 @@
         "SubnetDb": "[concat('data-',variables('rpfx'),'-subnet')]",
         "SubnetDbRef": "[concat(variables('vnetid'),'/subnets/',variables('SubnetDb'))]",
         "mariadblb": "[resourceId('Microsoft.Network/loadBalancers','mariadblb')]",        
-        "mariadbbe": "[concat(variables('mariadblb'),'/backendAddressPools/mariadbbe')]"
+        "mariadbbe": "[concat(variables('mariadblb'),'/backendAddressPools/mariadbbe')]",
+        "mariadbfipc": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/frontendIPConfigurations/mariadb-fipc')]",
+        "mariadbprobe": "[concat(resourceId('Microsoft.Network/loadBalancers','mariadblb'),'/probes/mariadb-probe')]"    
   },     
   "resources": 
   [        
