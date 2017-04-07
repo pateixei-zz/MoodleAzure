@@ -25,14 +25,21 @@
 glusterNode=$1
 glusterVolume=$2 
 
+
+echo $glusterNode    >> /tmp/vars.txt
+echo $glusterVolume  >> /tmp/vars.txt
+
+{
+
 # install pre-requisites
 sudo apt-get -y install python-software-properties
 
 #configure gluster repository & install gluster client
-sudo add-apt-repository ppa:gluster/glusterfs-3.7 -y
+sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
 sudo apt-get -y update
 sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
+#sudo add-apt-repository ppa:ondrej/php5-5.6
 
 # install the LAMP stack
 sudo apt-get -y install apache2 php5
@@ -44,8 +51,8 @@ sudo apt-get -y install graphviz aspell php5-pspell php5-curl php5-gd php5-intl 
 sudo mkdir -p /moodle
 
 # make the moodle directory writable for owner
-sudo chown www-data moodle
-sudo chmod 770 moodle
+sudo chown www-data /moodle
+sudo chmod 770 /moodle
  
 # mount gluster files system
 sudo echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tmp/mount.log 
@@ -101,3 +108,4 @@ sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/
 # restart Apache
 sudo service apache2 restart 
 
+}  > /tmp/setup.log

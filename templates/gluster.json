@@ -1,125 +1,48 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0", 
- "parameters": {
-        "resPrefix": {
-            "type": "string",
-            "defaultValue": "moodle"
-        }, 
-        "GlusterTshirtSize" : {
-            "type" : "string",
-            "defaultValue": "Small",
-            "allowedValues": [
-                "Small",
-                "Medium",
-                "Large"
-            ]
-        },
-        "adminUsername": {
-            "type": "string",
-            "defaultValue": "azureadmin",
-            "metadata": {
-                "description": "ssh user name"
-            }
-        },
-        "adminPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "ssh password"
-            }
-        },
-        "baseTemplate": {
-            "type": "string",
-            "defaultValue": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/",
-            "metadata": {
-                "description": "URL where templates are located"
-            }
-        }                
-  },
-  "variables": {
-        "rpfx" : "[tolower(parameters('resPrefix'))]",
-        "vnetName": "[concat(variables('rpfx'),'-vnet')]",
-        "storageAccount": "[concat('gfs',variables('rpfx'),'sa')]",
+ 
+	"parameters": { "moodleCommon": { "type": "object", "metadata": { "description": "Common Moodle values" } } },
 
-        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]",
-        "SubnetSan": "[concat('san-',variables('rpfx'),'-subnet')]",
-        "SubnetSanRef": "[concat(variables('vnetID'),'/subnets/',variables('SubnetSan'))]"
-  },     
-  "resources": 
-  [        
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[variables('storageAccount')]",
-            "apiVersion": "2015-06-15",
-            "location": "[resourceGroup().location]",
-            "tags": {
-                "displayName": "Gluster Storage Account"
-            },
-            "properties": {
-                "accountType": "Premium_LRS"
-            }
-        },
-        {
-            "name": "[concat('gfs-',variables('rpfx'),'-as')]",
-            "type": "Microsoft.Compute/availabilitySets",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2015-06-15",
-            "dependsOn": [],
-            "tags": {
-                "displayName": "Gluster Availability Set"
-            },
-            "properties": {
-                "platformUpdateDomainCount": 5,
-                "platformFaultDomainCount": 3
-            }
-        },
-        {
-            "apiVersion": "2015-01-01",
-            "name" : "GlusterNode01",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri" : "[concat(parameters('baseTemplate'),'templates/glustervm.json')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "resPrefix": { "value": "[variables('rpfx')]" }, 
-                    "GlusterTshirtSize" : {"value": "[parameters('GlusterTshirtSize')]"},
-                    "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm01')]" },
-                    "adminUsername": {"value": "[parameters('adminUserName')]" },
-                    "adminPassword": {"value": "[parameters('adminPassword')]"},
-                    "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
-                }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/gfs-',variables('rpfx'),'-as')]",
-                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"                
-            ]                          
-        },
-        {
-            "apiVersion": "2015-01-01",
-            "name" : "GlusterNode02",
-            "type": "Microsoft.Resources/deployments",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri" : "[concat(parameters('baseTemplate'),'templates/glustervm.json')]",
-                    "contentVersion": "1.0.0.0"
-                },
-                "parameters": {
-                    "resPrefix": { "value": "[variables('rpfx')]" }, 
-                    "GlusterTshirtSize" : {"value": "[parameters('GlusterTshirtSize')]"},
-                    "vmName": {"value": "[concat('gfs-',variables('rpfx'),'-vm02')]" },
-                    "adminUsername": {"value": "[parameters('adminUserName')]" },
-                    "adminPassword": {"value": "[parameters('adminPassword')]"},
-                    "availabilitySet":  {"value": "[concat('gfs-',variables('rpfx'),'-as')]"}
-                }
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/gfs-',variables('rpfx'),'-as')]",
-                "[concat('Microsoft.Storage/StorageAccounts/',variables('StorageAccount'))]"
-            ]                         
-        }                       
+	"variables": {
+		"Documentation1": "This sub-template drives the gluster (scale-out network-attached storage file system) creation process.",
+		"Documentation2": "It expects certain values in the 'common' datastructure.",
+		"Documentation3": "    api4Compute             - the 'managed' resources need to all use this value",
+		"Documentation4": "    gfxAvailabilitySetName  - name of availability set for the gluster farm",
+		"Documentation5": "    glusterVmCount          - number of nodes to create",
+
+		"Documentation6": "This sub-template calls other sub-templates",
+		"Documentation7": "    glustervm - number of nodes in the gluster farm"
+	},     
+
+	"resources":   [
+		{
+			"type":			"Microsoft.Compute/availabilitySets",
+			"apiVersion":	"[parameters('moodleCommon').api4Compute]",
+			"name":			"[parameters('moodleCommon').gfxAvailabilitySetName]",
+			"location":		"[resourceGroup().location]",
+
+			"tags":			{ "displayName": "Gluster Availability Set" },
+
+			"properties":	{ "platformUpdateDomainCount": 5, "platformFaultDomainCount": 3, "managed": "true" }
+		},
+
+
+		{
+			"type":			"Microsoft.Resources/deployments",
+			"apiVersion":	"2015-01-01",
+			"name" :		"[concat('glustervm',copyindex())]",
+
+			"dependsOn":	[ "[concat('Microsoft.Compute/availabilitySets/',parameters('moodleCommon').gfxAvailabilitySetName)]" ],
+
+			"copy":			{ "name": "vmloop", "count": "[parameters('moodleCommon').glusterVmCount]" },
+
+			"properties": {
+				"mode":			"Incremental",
+				"templateLink":	{ "uri":          "[concat(    parameters('moodleCommon').baseTemplateUrl,'glustervm.json')]" },
+				"parameters":	{ "moodleCommon": { "value": "[parameters('moodleCommon')]" }, 
+								  "counter":	  { "value": "[copyindex()]" } }
+			}
+		}
     ]
 }

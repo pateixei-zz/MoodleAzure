@@ -1,0 +1,27 @@
+﻿{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+
+	"parameters": {
+		"vmName":		{ "type": "string" },
+		"vmDiskCount":	{ "type": "int",	"minValue": 2, "maxValue": 8 }
+    },
+
+	"variables": {		
+
+		"diskArray": [
+			{ "lun": 0, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk1'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 1, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk2'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 2, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk3'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 3, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk4'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 4, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk5'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 5, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk6'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 6, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk7'))]" },"caching": "None", "createOption": "Attach" 	},
+			{ "lun": 7, "managedDisk": { "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('vmName'),'-datadisk8'))]" },"caching": "None", "createOption": "Attach" 	}
+		]
+	},
+
+	"resources": [],
+
+	"outputs": { "dataDiskArray": { "type": "array", "value": "[take(variables('diskArray'),parameters('vmDiskCount'))]" } }
+}

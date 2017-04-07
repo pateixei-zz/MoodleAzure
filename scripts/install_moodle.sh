@@ -27,13 +27,20 @@
     glusterVolume=$3 
     moodledbapwd=$4
     siteFQDN=$5
+    mariadbIP=$6
+
+	echo $moodleVersion  >> /tmp/vars.txt
+	echo $glusterNode    >> /tmp/vars.txt
+	echo $glusterVolume  >> /tmp/vars.txt
+	echo $moodledbapwd   >> /tmp/vars.txt
+	echo $siteFQDN       >> /tmp/vars.txt
+	echo $mariadbIP      >> /tmp/vars.txt
+
     # create gluster mount point
-
-
     mkdir -p /moodle
 
     #configure gluster repository & install gluster client
-    sudo add-apt-repository ppa:gluster/glusterfs-3.7 -y
+    sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
     sudo apt-get -y update
     sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
@@ -51,7 +58,11 @@
     sudo mkdir -p /moodle/moodledata
 
     # install pre-requisites
+	#sudo apt-get update
     sudo apt-get install -y --fix-missing python-software-properties unzip
+	#sudo apt-get update
+
+	#sudo add-apt-repository ppa:ondrej/php5-5.6
 
     # install the LAMP stack
     sudo apt-get install -y apache2 mysql-client php5
@@ -65,14 +76,14 @@
 
     # downloading moodle 
     curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
-    unzip moodle.zip
+    unzip -q moodle.zip
     echo -e \n\rMoving moodle files to Gluster\n\r 
     mv -v moodle-'$moodleVersion' /moodle/html/moodle
 
     # install Office 365 plugins
     #if [ "$installOfficePlugins" = "True" ]; then
             curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/'$moodleVersion'.zip -L -o o365.zip
-            unzip o365.zip
+            unzip -q o365.zip
             cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
             rm -rf o365-moodle-'$moodleVersion'
     #fi
@@ -141,13 +152,13 @@
     sudo chmod -R 770 /moodle/certs
     sudo chmod -R 770 /moodle/moodledata
 
+
+
    # restart Apache
     echo -e "\n\rRestarting Apache2 httpd server\n\r"
     sudo service apache2 restart 
     
-    echo -e "sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass="$moodledbapwd" --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$moodledbapwd" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
-
-    sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN --dataroot=/moodle/moodledata --dbhost=172.18.2.5 --dbpass=$moodledbapwd --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd --adminemail=admin@$siteFQDN --non-interactive --agree-license --allow-unstable || true
+    sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=http://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
     echo -e "\n\rDone! Installation completed!\n\r"
 }  > /tmp/install.log

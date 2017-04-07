@@ -1,36 +1,13 @@
 ﻿{
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
-  "parameters": {
-    "_artifactsLocation": {
-      "value": ""
-    },
-    "_artifactsLocationSasToken": {
-      "value": null 
-    },
-    "adminPassword": {
-      "value": "senha1abc.." 
-    },
-    "adminUsername": {
-      "value": "azureadmin"
-    },
-    "jboxpipDnsName": {
-      "value": "ptxmoo1"
-    },
-    "projectName": {
-      "value": "moodle"
-    },
-    "storageAccountName": {
-      "value": "ptxmoo1"
-    },
-    "virtualNetworkName": {
-      "value": "ptxmoo1"
-    },
-    "vmNamePrefix": {
-      "value": "ptxmoo"
-    },
-    "vmSize": {
-      "value": "Standard_DS2"
-    }
-  }
+
+	"parameters": {
+		"moodleVersion":		{ "value": "MOODLE_29_STABLE" },
+		    "adminPassword":	{ "value": "Sw!mmingP00l" },
+		"mySQLuserPassword":	{ "value": "Sw!mmingP00l" },
+		"mySQLrootPassword":	{ "value": "Sw!mmingP00l" },
+		"applyScriptsSwitch":	{ "value": 1 },
+		 "azureBackupSwitch":	{ "value": 1 }
+	}
 }

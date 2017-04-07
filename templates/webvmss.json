@@ -1,300 +1,91 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {},
-  "variables": {
-        "diagnosticsStorageAccountName": "[variables('SharedStorageAccountName')]",
-        "diagnosticsStorageAccountResourceGroup": "[resourceGroup().name]",
-        "wadlogs": "<WadCfg><DiagnosticMonitorConfiguration>",
-        "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\AvailableMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentAvailableMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. percent available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\UsedMemory\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory used\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedMemory\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory percentage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\PercentUsedByCache\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Mem. used by cache\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIdleTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU idle time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentUserTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentIOWaitTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU IO wait time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
-        "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\BytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk total bytes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WriteBytesPerSecond\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\TransfersPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk transfers\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\ReadsPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk reads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\WritesPerSecond\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk writes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageReadTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageWriteTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageTransferTime\" sampleRate=\"PT15S\" unit=\"Seconds\"><annotation displayName=\"Disk transfer time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk\\AverageDiskQueueLength\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Disk queue length\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
-        "wadcfgxstart": "[concat(variables('wadlogs'),variables('wadperfcounters1'),variables('wadperfcounters2'),'<Metrics resourceId=\"')]",
-        "wadmetricsresourceid": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name ,'/providers/','Microsoft.Compute/virtualMachineScaleSets/','vmSS',variables('vmName'))]",
-        "wadcfgxend": "[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]"
-      
-  },
-  "resources": [
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
 
-       
-        {
-            "apiVersion": "2016-03-30",
-            "type": "Microsoft.Network/loadBalancers",
-            "location": "[resourceGroup().location]",
-            "name": "lbWeb",
-            "dependsOn": [
-                "[concat('Microsoft.Network/publicIPAddresses/','webpip')]"
-            ],
-            "properties": {
-                "frontendIPConfigurations": [
-                {
-                    "name": "ipcfg_lb",
-                    "properties": {
-                    "publicIPAddress": {
-                        "id": "[variables('publicIPAddressID')]"
-                    }
-                    }
-                }
-                ],
-                "backendAddressPools": [
-                {
-                    "name": "[variables('bePoolName')]"
-                }
-                ],
-                "loadBalancingRules": [
-                {
-                    "name": "lbhttp",
-                    "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[variables('frontEndIPConfigID')]"
-                    },
-                    "backendAddressPool": {
-                        "id": "[variables('lbPoolID')]"
-                    },
-                    "protocol": "tcp",
-                    "frontendPort": 80,
-                    "backendPort": 80,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 5,
-                    "probe": {
-                        "id": "[variables('lbProbeID')]"
-                    }
-                    }
-                },
-                {
-                    "name": "lbhttps",
-                    "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[variables('frontEndIPConfigID')]"
-                    },
-                    "backendAddressPool": {
-                        "id": "[variables('lbPoolID')]"
-                    },
-                    "protocol": "tcp",
-                    "frontendPort": 443,
-                    "backendPort": 443,
-                    "enableFloatingIP": false,
-                    "idleTimeoutInMinutes": 5,
-                    "probe": {
-                        "id": "[variables('lbProbeID')]"
-                    }
-                    }
-                }
-                ],
-                "probes": [
-                {
-                    "name": "tcpProbe",
-                    "properties": {
-                    "protocol": "tcp",
-                    "port": 80,
-                    "intervalInSeconds": "5",
-                    "numberOfProbes": "3"
-                    }
-                }
-                ],
-                "inboundNatPools": [
-                {
-                    "name": "[variables('natPoolName')]",
-                    "properties": {
-                    "frontendIPConfiguration": {
-                        "id": "[variables('frontEndIPConfigID')]"
-                    },
-                    "protocol": "tcp",
-                    "frontendPortRangeStart": "[variables('natStartPort')]",
-                    "frontendPortRangeEnd": "[variables('natEndPort')]",
-                    "backendPort": "[variables('natBackendPort')]"
-                    }
-                }
-                ]
-            }            
-        },        
-        {
-            "type": "Microsoft.Compute/virtualMachineScaleSets",
-            "name": "webfarm",
-            "location": "[resourceGroup().location]",
-            "apiVersion": "2016-03-30",
-            "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '0')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '1')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '2')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '3')]",
-                "[concat('Microsoft.Storage/storageAccounts/', 'vmss',variables('storageAcctName'), '4')]",
-                "[concat('Microsoft.Compute/virtualMachines/gfs',variables('vmName'),'0/extensions/setupGluster')]",                
-                "[concat('Microsoft.Compute/virtualMachines/jbox',variables('vmName'),'/extensions/install_moodle')]",                
-                "[concat('Microsoft.Network/loadBalancers/', 'lbWeb')]",
-                "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
-            ],
-            "tags": {
-                "displayName": "webfarm"
-            },
-            "sku": {
-                "capacity": 10,
-                "name": "Standard_D2",
-                "tier": "Standard"
-            },
-            "properties": {
-                "overprovision": "true",
-                "upgradePolicy": {
-                    "mode": "Manual"
-                },
-                "virtualMachineProfile": {
-                    "storageProfile": {
-                        "osDisk": {
-                            "vhdContainers": [
-                                "[concat('https://', 'vmss', variables('storageAcctName'), '0.blob.core.windows.net/vhds0')]",
-                                "[concat('https://', 'vmss', variables('storageAcctName'), '1.blob.core.windows.net/vhds1')]",
-                                "[concat('https://', 'vmss', variables('storageAcctName'), '2.blob.core.windows.net/vhds2')]",
-                                "[concat('https://', 'vmss', variables('storageAcctName'), '3.blob.core.windows.net/vhds3')]",
-                                "[concat('https://', 'vmss', variables('storageAcctName'), '4.blob.core.windows.net/vhds4')]"
-                            ],
-                            "name": "osdisk",
-                            "caching": "ReadOnly",
-                            "createOption": "FromImage"
-                        },
-                    "imageReference": {
-                        "publisher": "[variables('osImagePublisher')]",
-                        "offer": "[variables('osImageOffer')]",
-                        "sku": "[variables('osImageSKU')]",
-                        "version": "[variables('osImageVersion')]"
-                    }
-                    },
-                    "osProfile": {
-                        "computerNamePrefix": "[concat('web',variables('vmName'))]",
-                        "adminUsername": "[parameters('adminUsername')]",
-                        "adminPassword": "[parameters('adminPassword')]"
-                    },
-                    "networkProfile": {
-                        "networkInterfaceConfigurations": [
-                            {
-                                "name": "[variables('nicName')]",
-                                "properties": {
-                                    "ipConfigurations": [
-                                        {
-                                            "name": "ipcfg_lb",
-                                            "properties": {
-                                                "subnet": {
-                                                    "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/virtualNetworks/', variables('vnetName'), '/subnets/', variables('subnetWeb'))]"
-                                                },
-                                                "loadBalancerBackendAddressPools": [
-                                                    {
-                                                        "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/backendAddressPools/', variables('bePoolName'))]"
-                                                    }
-                                                ],
-                                               "loadBalancerInboundNatPools": [
-                                                  {
-                                                      "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Network/loadBalancers/lbWeb/inboundNatPools/', variables('natPoolName'))]"
-                                                    }
-                                               ]      
-                                            }
-                                        }
-                                    ],
-                                    "primary": "true"
-                                }
-                            }
-                        ]
-                    },
-                    "extensionProfile": {
-                        "extensions": [
-                            {
-                                "name": "LinuxDiagnostic",
-                                "properties": {
-                                    "publisher": "Microsoft.OSTCExtensions",
-                                    "type": "LinuxDiagnostic",
-                                    "typeHandlerVersion": "2.3",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                        "xmlCfg": "[base64(concat(variables('wadcfgxstart'),variables('wadmetricsresourceid'),variables('wadcfgxend')))]",
-                                        "storageAccount": "[variables('diagnosticsStorageAccountName')]"
-                                    },
-                                    "protectedSettings": {
-                                        "storageAccountName": "[variables('diagnosticsStorageAccountName')]",
-                                        "storageAccountKey": "[listkeys(variables('accountid'), variables('storageApiVersion')).key1]",
-                                        "storageAccountEndPoint": "https://core.windows.net"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "setup_moodle",
-                                "properties": {
-                                    "publisher": "Microsoft.OSTCExtensions",
-                                    "type": "CustomScriptForLinux",
-                                    "typeHandlerVersion": "1.4",
-                                    "autoUpgradeMinorVersion": true,
-                                    "settings": {
-                                        "fileUris": [
-                                            "[concat(variables('moodleScriptLocation'),variables('setup_moodleScriptFileName'))]"
-                                        ],
-                                        "commandToExecute": "[concat('bash ', variables('setup_moodleScriptFileName'),' ','gfs',variables('vmName'),'0', ' ',variables('volumeName') )]"
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Insights/autoscaleSettings",
-            "apiVersion": "2015-04-01",
-            "name": "autoscalewad",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "Microsoft.Compute/virtualMachineScaleSets/webfarm"
-            ],
-            "properties": {
-                "name": "autoscalewad",
-                "targetResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webfarm')]",
-                "enabled": true,
-                "profiles": [
-                    {
-                        "name": "Profile1",
-                        "capacity": {
-                            "minimum": "2",
-                            "maximum": "10",
-                            "default": "4"
-                        },
-                        "rules": [
-                            {
-                                "metricTrigger": {
-                                    "metricName": "\\Processor\\PercentProcessorTime",
-                                    "metricNamespace": "",
-                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/','webfarm')]",
-                                    "timeGrain": "PT1M",
-                                    "statistic": "Average",
-                                    "timeWindow": "PT5M",
-                                    "timeAggregation": "Average",
-                                    "operator": "GreaterThan",
-                                    "threshold": 80
-                                },
-                                "scaleAction": {
-                                    "direction": "Increase",
-                                    "type": "ChangeCount",
-                                    "value": "1",
-                                    "cooldown": "PT1M"
-                                }
-                            },
-                            {
-                                "metricTrigger": {
-                                    "metricName": "\\Processor\\PercentProcessorTime",
-                                    "metricNamespace": "",
-                                    "metricResourceUri": "[concat('/subscriptions/',subscription().subscriptionId, '/resourceGroups/',  resourceGroup().name, '/providers/Microsoft.Compute/virtualMachineScaleSets/', 'webfarm')]",
-                                    "timeGrain": "PT1M",
-                                    "statistic": "Average",
-                                    "timeWindow": "PT5M",
-                                    "timeAggregation": "Average",
-                                    "operator": "LessThan",
-                                    "threshold": 50
-                                },
-                                "scaleAction": {
-                                    "direction": "Decrease",
-                                    "type": "ChangeCount",
-                                    "value": "1",
-                                    "cooldown": "PT5M"
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        }              
-  ]
+	"parameters": { "moodleCommon": { "type": "object", "metadata": { "description": "Common Moodle values" } } },
+
+	"variables": {
+ 		"SubnetWebRef":	"[concat(resourceId('Microsoft.Network/virtualNetworks',		parameters('moodleCommon').vnetName),'/subnets/',parameters('moodleCommon').SubnetWeb)]",
+		 "vmssID":		"[       resourceId('Microsoft.Compute/virtualMachineScaleSets',parameters('moodleCommon').vmssName)]",
+		"dstorID":		"[       resourceId('Microsoft.Storage/storageAccounts',		parameters('moodleCommon').vmssdStorageAccounttName)]",
+		  "pipID":		"[       resourceId('Microsoft.Network/publicIPAddresses',		parameters('moodleCommon').lbPipName)]",
+		"extLbID":		"[       resourceId('Microsoft.Network/loadBalancers',			parameters('moodleCommon').lbName)]",
+
+		"extFeID":		"[concat(variables('extLbID'),'/frontendIPConfigurations/', parameters('moodleCommon').extFeName )]",
+		"extBeID":		"[concat(variables('extLbID'),'/backendAddressPools/',      parameters('moodleCommon').extBeName )]",
+		"extProbeID":	"[concat(variables('extLbID'),'/probes/',                   parameters('moodleCommon').extProbe  )]",
+		"extNatPoolID":	"[concat(variables('extLbID'),'/inboundNatPools/',          parameters('moodleCommon').extNatPool)]",
+	
+		"storageApiVersion": "2015-06-15",  // needed becuase its specified in multple locations	
+
+		"wadlogs":			"<WadCfg><DiagnosticMonitorConfiguration>",
+		"wadperfcounter":	"<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor\\PercentProcessorTime\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU percentage guest OS\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>",
+		"wadcfgxstart":		"[concat(variables('wadlogs'),variables('wadperfcounter'),'<Metrics resourceId=\"')]",
+		"wadcfgxend":		"[concat('\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>')]",
+	
+		"scriptUri":	"[concat(parameters('moodleCommon').ScriptLocation,parameters('moodleCommon').moodleSetupScriptFileName)]",
+		"cmdExec":		"[concat('bash ',                                  parameters('moodleCommon').moodleSetupScriptFileName,' ',parameters('moodleCommon').gfsNameRoot,'0', ' ','data' )]"
+	
+	},
+	
+	"resources": [
+		{
+			"type":			"Microsoft.Storage/storageAccounts",
+			"apiVersion":	"[variables('storageApiVersion')]",
+			"name":			"[parameters('moodleCommon').vmssdStorageAccounttName]",
+			"location":		"[resourceGroup().location]",
+
+			"properties":	{ "accountType": "Standard_LRS" }
+		},
+
+
+		{
+			"type":			"Microsoft.Compute/virtualMachineScaleSets",
+			"apiVersion":	"2016-04-30-preview",
+			"name":			"[parameters('moodleCommon').vmssName]",
+			"location":		"[resourceGroup().location]",
+
+			"tags":			{ "displayName": "webfarm" },
+			
+			"dependsOn":	[ "[concat('Microsoft.Storage/storageAccounts/', parameters('moodleCommon').vmssdStorageAccounttName)]" ],
+			
+			"sku":			{ "capacity": 3, "name": "Standard_D2", "tier": "Standard" },
+
+			"properties":	{ "overprovision": "true", "upgradePolicy": { "mode": "Manual" },
+				"virtualMachineProfile": {
+					"storageProfile": {	"osDisk": { "caching": "ReadOnly", "createOption": "FromImage", "managedDisk": { "storageAccountType": "Standard_LRS" } }, "imageReference": "[parameters('moodleCommon').osType]" },
+					     "osProfile": { "computerNamePrefix": "[parameters('moodleCommon').vmssName]", "adminUsername": "[parameters('moodleCommon').adminUsername]", "adminPassword": "[parameters('moodleCommon').adminPassword]" },
+					"networkProfile": { "networkInterfaceConfigurations": [ { "name": "vmssnic", "properties": { "ipConfigurations": [ { "name": "ipcfg_lb", "properties": { "subnet": { "id": "[variables('SubnetWebRef')]" }, "loadBalancerBackendAddressPools": [ { "id": "[variables('extBeID')]" } ], "loadBalancerInboundNatPools": [ { "id": "[variables('extNatPoolID')]" } ] } } ], "primary": "true" } } ] },
+				  "extensionProfile": {
+				    	"extensions": [
+				    		{	"name": "LinuxDiagnostic", 
+				    				"properties":			{ "publisher": "Microsoft.OSTCExtensions", "type": "LinuxDiagnostic", "typeHandlerVersion": "2.3", "autoUpgradeMinorVersion": true,
+				    				"settings":				{ "xmlCfg": "[base64(concat(variables('wadcfgxstart'), variables('vmssID'), variables('wadcfgxend')))]", "storageAccount": "[parameters('moodleCommon').vmssdStorageAccounttName]" },
+				    				"protectedSettings":	{ "storageAccountName": "[parameters('moodleCommon').vmssdStorageAccounttName]", "storageAccountKey": "[listkeys(variables('dstorID'), variables('storageApiVersion')).key1]", "storageAccountEndPoint": "https://core.windows.net"} }
+				    		},
+				    		{	"name": "setup_moodle",
+				    				"properties":			{ "publisher": "Microsoft.OSTCExtensions", "type": "CustomScriptForLinux", "typeHandlerVersion": "1.4", "autoUpgradeMinorVersion": true,
+				    				"settings":				{ "fileUris": [ "[variables('scriptUri')]" ], "commandToExecute": "[variables('cmdExec')]" } }
+				    		}
+				    	]
+				    }
+				}
+			}
+		},
+
+	
+		{
+			"type":			"Microsoft.Insights/autoscaleSettings",
+			"apiVersion":	"2015-04-01",
+			"name":			"autoscalewad",
+			"location":		"[resourceGroup().location]",
+            
+			"dependsOn":	[ "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('moodleCommon').vmssName)]" ],
+
+			"properties":	{         "name": "autoscalewad", "targetResourceUri": "[variables('vmssID')]", "enabled": true,
+				"profiles": [ { "name": "Profile1", "capacity": { "minimum": "2", "maximum": "10", "default": "4" },
+					"rules":	[ { "scaleAction": { "direction": "Increase", "type": "ChangeCount", "value": "1", "cooldown": "PT1M" }, "metricTrigger":	{ "metricName": "\\Processor\\PercentProcessorTime", "metricNamespace": "", "metricResourceUri": "[variables('vmssID')]", "timeGrain": "PT1M", "statistic": "Average", "timeWindow": "PT5M", "timeAggregation": "Average", "operator": "GreaterThan", "threshold": 80 } },
+								  { "scaleAction": { "direction": "Decrease", "type": "ChangeCount", "value": "1", "cooldown": "PT5M" }, "metricTrigger":	{ "metricName": "\\Processor\\PercentProcessorTime", "metricNamespace": "", "metricResourceUri": "[variables('vmssID')]", "timeGrain": "PT1M", "statistic": "Average", "timeWindow": "PT5M", "timeAggregation": "Average", "operator": "LessThan",    "threshold": 50 } } ] } ] }
+		}
+	]
 }
