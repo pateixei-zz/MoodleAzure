@@ -46,8 +46,8 @@
 		"rpfx": "[tolower(parameters('resourcesPrefix'))]",
 
 		"moodleCommon": {
-			"baseTemplateUrl": "https://abceasyas123.blob.core.windows.net/moostuff/",
-			"scriptLocation":  "https://abceasyas123.blob.core.windows.net/moostuff/",
+			"baseTemplateUrl": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/templates/",
+			"scriptLocation":  "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/scripts/",
 
 			"api4Compute":  	"2016-04-30-preview",
 
