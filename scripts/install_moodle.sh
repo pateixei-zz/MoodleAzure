@@ -62,7 +62,7 @@
     sudo apt-get install -y --fix-missing python-software-properties unzip
 	#sudo apt-get update
 
-	sudo add-apt-repository ppa:ondrej/php5-5.6
+	sudo add-apt-repository -y ppa:ondrej/php5-5.6
 
     # install the LAMP stack
     sudo apt-get install -y apache2 mysql-client php5

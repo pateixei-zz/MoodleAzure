@@ -39,7 +39,7 @@ sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
 sudo apt-get -y update
 sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
-sudo add-apt-repository ppa:ondrej/php5-5.6
+sudo add-apt-repository -y ppa:ondrej/php5-5.6
 
 # install the LAMP stack
 sudo apt-get -y install apache2 php5
