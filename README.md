@@ -1,7 +1,8 @@
-# MoodleAzure
-Moodle deployment using Azure Resource Manager Template
+ # MoodleAzure 
 
-[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpateixei%2FMoodleAzure%2Fmaster%2Fazuredeploy.json)
+(Deprecated, please use V2 branch!) 
+
+Moodle deployment using Azure Resource Manager Template
 
 This Azure Resource Manager template creates a clustered moodle environment. 
 
