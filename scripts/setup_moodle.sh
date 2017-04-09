@@ -39,7 +39,7 @@ sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
 sudo apt-get -y update
 sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
-sudo add-apt-repository -y ppa:ondrej/php5-5.6
+sudo add-apt-repository -y ppa:ondrej/php
 
 # install the LAMP stack
 sudo apt-get -y install apache2 php5.6
@@ -95,7 +95,7 @@ echo -e '
 </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
 # php config 
-PhpIni=/etc/php/5.6/apache2/php.ini
+PhpIni=/etc/php/5/apache2/php.ini
 sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
 sed -i "s/;opcache.use_cwd.*1/opcache.use_cwd = 1/" $PhpIni
 sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni

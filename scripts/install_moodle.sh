@@ -62,10 +62,7 @@
     sudo apt-get install -y --fix-missing python-software-properties unzip
 	#sudo apt-get update
 
-	sudo add-apt-repository -y ppa:ondrej/php5-5.6
-
-
-    sudo add-apt-repository -y ppa:ondrej/php5-5.6
+    sudo add-apt-repository -y ppa:ondrej/php
 
     # install the LAMP stack
     sudo apt-get -y install apache2 php5.6
@@ -136,7 +133,7 @@
     </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
     # php config 
-    PhpIni=/etc/php/5.6/apache2/php.ini
+    PhpIni=/etc/php/5/apache2/php.ini
     sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
     sed -i "s/;opcache.use_cwd.*/opcache.use_cwd = 1/" $PhpIni
     sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni
