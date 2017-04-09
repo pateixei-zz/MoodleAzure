@@ -64,11 +64,14 @@
 
 	sudo add-apt-repository -y ppa:ondrej/php5-5.6
 
+
+    sudo add-apt-repository -y ppa:ondrej/php5-5.6
+
     # install the LAMP stack
-    sudo apt-get install -y apache2 mysql-client php5
+    sudo apt-get -y install apache2 php5.6
 
     # install moodle requirements
-    sudo apt-get install -y --fix-missing graphviz aspell php5-pspell php5-curl php5-gd php5-intl php5-mysql php5-xmlrpc php5-ldap php5-redis
+    sudo apt-get -y install graphviz aspell php5.6-pspell php5.6-curl php5.6-gd php5.6-intl php5.6-mysql php5.6-xmlrpc php5.6-ldap php5.6-redis
 
     # install Moodle 
     echo '#!/bin/bash
@@ -133,17 +136,15 @@
     </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
     # php config 
-    PhpIni=/etc/php5/apache2/php.ini
+    PhpIni=/etc/php/5.6/apache2/php.ini
     sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
-    sed -i "s/;opcache.use_cwd = 1/opcache.use_cwd = 1/" $PhpIni
-    sed -i "s/;opcache.validate_timestamps = 1/opcache.validate_timestamps = 1/" $PhpIni
-    sed -i "s/;opcache.save_comments = 1/opcache.save_comments = 1/" $PhpIni
-    sed -i "s/;opcache.enable_file_override = 0/opcache.enable_file_override = 0/" $PhpIni
-    sed -i "s/;opcache.enable = 0/opcache.enable = 1/" $PhpIni
+    sed -i "s/;opcache.use_cwd.*/opcache.use_cwd = 1/" $PhpIni
+    sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni
+    sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" $PhpIni
+    sed -i "s/;opcache.enable_file_override.*/opcache.enable_file_override = 0/" $PhpIni
+    sed -i "s/;opcache.enable.*/opcache.enable = 1/" $PhpIni
     sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
     sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
-
- 
     
     sudo chown -R www-data /moodle/html/moodle
     sudo chown -R www-data /moodle/certs
@@ -152,13 +153,11 @@
     sudo chmod -R 770 /moodle/certs
     sudo chmod -R 770 /moodle/moodledata
 
-
-
    # restart Apache
     echo -e "\n\rRestarting Apache2 httpd server\n\r"
     sudo service apache2 restart 
     
-    sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=http://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
+    sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
     echo -e "\n\rDone! Installation completed!\n\r"
 }  > /tmp/install.log
