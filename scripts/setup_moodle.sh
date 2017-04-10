@@ -40,6 +40,7 @@ sudo apt-get -y update
 sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
 sudo add-apt-repository -y ppa:ondrej/php
+sudo apt-get -y update
 
 # install the LAMP stack
 sudo apt-get -y install apache2 php5.6

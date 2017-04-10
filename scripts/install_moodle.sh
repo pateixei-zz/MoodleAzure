@@ -60,9 +60,10 @@
     # install pre-requisites
 	#sudo apt-get update
     sudo apt-get install -y --fix-missing python-software-properties unzip
-	#sudo apt-get update
 
+	#sudo apt-get update
     sudo add-apt-repository -y ppa:ondrej/php
+    sudo apt-get -y update
 
     # install the LAMP stack
     sudo apt-get -y install apache2 php5.6
@@ -153,6 +154,8 @@
    # restart Apache
     echo -e "\n\rRestarting Apache2 httpd server\n\r"
     sudo service apache2 restart 
+
+    echo -e "sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true"
     
     sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
