@@ -66,7 +66,6 @@
 			"moodleVersion":		"[parameters('moodleVersion')]",
 			"GlusterTshirtSize":	"[parameters('GlusterTshirtSize')]",
 			"MariadbTshirtSize":	"[parameters('MariadbTshirtSize')]",
-			"CntrlerTshirtSize":	"[parameters('CntrlerTshirtSize')]",
 			"adminUsername":		"[parameters('adminUsername')]",
 			"adminPassword":		"[parameters('adminPassword')]",
 			"mySqlUserPassword":	"[parameters('mySqlUserPassword')]",
