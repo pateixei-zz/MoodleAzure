@@ -69,8 +69,7 @@
     sudo apt-get -y install apache2 php5.6 php5.6-cli
 
     # install moodle requirements
-    # sudo apt-get -y install graphviz aspell php5.6-curl php5.6-zip php5.6-pspell php5.6-curl php5.6-gd php5.6-intl php5.6-mysql php5.6-xmlrpc php5.6-ldap php5.6-redis
-    sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl 
+    sudo apt-get install -y --force-yes graphviz aspell php5.6-common php5.6-soap php5.6-mbstring php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl 
 
     # install Moodle 
     echo '#!/bin/bash
