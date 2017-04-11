@@ -123,12 +123,16 @@ EOF
     #mysql settings
     #wsrep_on=ON
     binlog_format=ROW
-    default-storage-engine=innodb
     innodb_autoinc_lock_mode=2
     query_cache_size=0
     query_cache_type=0
     bind-address=0.0.0.0
 
+    #innodb settings 
+    default-storage-engine=innodb
+    innodb_large_prefix=ON
+    innodb_file_format="Barracuda"
+    
     #galera settings
     wsrep_provider=/usr/lib/galera/libgalera_smm.so
     wsrep_cluster_name="CLUSTERNAME"
