@@ -171,3 +171,6 @@ EOF
     echo "MariaDB Cluster instalation finished"
 
 } /tmp/setup-mariadb.log
+
+
+
