@@ -41,7 +41,7 @@
 
     for (( n=1; n<=$NNODES; n++ ))
     do
-    IPLIST+=`echo "${IPPREFIX}$(( $n + 9 ))"`
+    IPLIST+=`echo "${IPPREFIX}$(( $n + 3 ))"`
     if [ "$n" -lt $NNODES ];
     then
             IPLIST+=`echo ","`
@@ -118,7 +118,7 @@ EOF
     # create Galera config file
 
     #wget https://raw.githubusercontent.com/pateixei/azure-nginx-php-mariadb-cluster/master/files/cluster.cnf > /dev/null
-    
+
     echo -e '[mysqld]
     #mysql settings
     #wsrep_on=ON
