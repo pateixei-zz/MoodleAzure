@@ -10,7 +10,7 @@
 
 	"variables": {
 		"scriptUri":	"[concat(parameters('moodleCommon').ScriptLocation,parameters('moodleCommon').mariadbScriptFileName)]",
-		"cmdExec":		"[concat('bash ', parameters('moodleCommon').mariadbScriptFileName,' ', parameters('moodleCommon').mariadbVmCount, ' ', parameters('moodleCommon').mySQLrootPassword,' ', parameters('moodleCommon').SubnetMdbPrefix, ' ', parameters('moodleCommon').mySQLuserPassword)]"
+		"cmdExec":		"[concat('bash ', parameters('moodleCommon').mariadbScriptFileName,' ', parameters('moodleCommon').mariadbVmCount, ' ', parameters('moodleCommon').mySQLrootPassword,' ', parameters('moodleCommon').SubnetMdbPrefix, '. ', parameters('moodleCommon').mySQLuserPassword)]"
 	},
 
 	"resources": [

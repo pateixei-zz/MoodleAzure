@@ -35,18 +35,18 @@ echo $glusterVolume  >> /tmp/vars.txt
 sudo apt-get -y install python-software-properties
 
 #configure gluster repository & install gluster client
-sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
+sudo add-apt-repository -y ppa:gluster/glusterfs-3.8
+sudo add-apt-repository -y ppa:ondrej/php
+
 sudo apt-get -y update
 sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
 
-sudo add-apt-repository -y ppa:ondrej/php
-sudo apt-get -y update
-
 # install the LAMP stack
-sudo apt-get -y install apache2 php5.6
+sudo apt-get -y install apache2 php5.6 
 
 # install moodle requirements
-sudo apt-get -y install graphviz aspell php5.6-pspell php5.6-curl php5.6-gd php5.6-intl php5.6-mysql php5.6-xmlrpc php5.6-ldap php5.6-redis
+# sudo apt-get -y install graphviz aspell php5.6-curl php5.6-zip php5.6-pspell php5.6-curl php5.6-gd php5.6-intl php5.6-mysql php5.6-xmlrpc php5.6-ldap php5.6-redis
+sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl 
 
 # create gluster mount point
 sudo mkdir -p /moodle

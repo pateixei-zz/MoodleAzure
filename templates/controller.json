@@ -81,7 +81,7 @@
 			"name":			"[parameters('moodleCommon').jboxVmName]",
 			"location":		"[resourceGroup().location]",
 			
-			"tags":			{ "displayName": "Gluster Virtual Machine" },
+			"tags":			{ "displayName": "Jumpbox Virtual Machine" },
 
 			"dependsOn":	[ "[concat('Microsoft.Network/networkInterfaces/', parameters('moodleCommon').jboxNicName)]" ],
 			
