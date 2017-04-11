@@ -153,12 +153,12 @@
     sudo chmod -R 770 /moodle/moodledata
 
    # restart Apache
-    echo -e "\n\rRestarting Apache2 httpd server\n\r"
+    echo  "\n\rRestarting Apache2 httpd server\n\r"
     sudo service apache2 restart 
 
-    echo -e "sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true"
+    echo "sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true"
     
     sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
-    echo -e "\n\rDone! Installation completed!\n\r"
+    echo "\n\rDone! Installation completed!\n\r"
 }  > /tmp/install.log
