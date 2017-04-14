@@ -54,7 +54,7 @@ sudo apt-get -y update > /dev/null
 
 sudo apt-get install -y mariadb-client
 sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
-sudo apt-get install -y php5.6-mysql
+sudo apt-get install -y php5.6-xml php5.6-mysql
 
 # create gluster mount point
 sudo mkdir -p /moodle
