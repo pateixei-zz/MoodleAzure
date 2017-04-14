@@ -47,20 +47,15 @@ sudo apt-get -y update                                                  >> /tmp/
 sudo apt-get -y --force-yes install apache2                             >> /tmp/apt5a.log
 sudo apt-get -y --force-yes install php5.6 php5.6-cli                   >> /tmp/apt5b.log
 
-# install moodle requirements
+# install moodle requirements, force-yes
 sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
 sudo add-apt-repository 'deb http://mirror.edatel.net.co/mariadb/repo/10.1/ubuntu trusty main'
 sudo apt-get -y update > /dev/null
 
-sudo apt-get install -y mariadb-client
-<<<<<<< HEAD
-sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath \ 
-                        php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 \
-                        php5.6-redis php5.6-curl php5.6-mysql       >> /tmp/apt6.log
-=======
-sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
-sudo apt-get install -y php5.6-xml php5.6-mysql
->>>>>>> 079f58b9833bf325e16d88cb8e37d7c17735bd47
+sudo apt-get install -y --force-yes mariadb-client
+sudo apt-get install -y --force-yes graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath >/tmp/apt6.log 
+sudo apt-get install -y --force-yes php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 >> /tmp/apt6.log
+sudo apt-get install -y --force-yes php5.6-redis php5.6-curl php5.6-mbstring php5.6-mysql       >> /tmp/apt6.log
 
 # create gluster mount point
 sudo mkdir -p /moodle
@@ -75,7 +70,7 @@ sudo echo -e 'mount -t glusterfs '$glusterNode':/'$glusterVolume' /moodle' > /tm
 sudo echo -e $glusterNode':/'$glusterVolume'   /moodle         glusterfs       defaults,_netdev,log-level=WARNING,log-file=/var/log/gluster.log 0 0' >> /etc/fstab
 sudo mount -a
 # updapte Apache configuration
-sudo cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak
+sudo cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.bak 
 sudo sed -i 's/\/var\/www/\/\moodle/g' /etc/apache2/apache2.conf
 sudo echo ServerName \"localhost\"  >> /etc/apache2/apache2.conf
 
