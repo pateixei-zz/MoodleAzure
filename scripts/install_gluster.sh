@@ -147,14 +147,16 @@ BLACKLIST="/dev/sda|/dev/sdb"
             index=0
             while [ $index -lt $NODECOUNT ]; do
 			    echo "Node ${index}"
+				thisNode="${PEERNODEIPPREFIX}.$(($index+$AZUREVMOFFSET))"
+			    echo "Node ${thisNode}"
+
                 if [ $index -ne $NODEINDEX ]; then
-					thisNode=$(($index+$AZUREVMOFFSET))
 				    echo "Node ${thisNode} is a peer"
-                    iptables -I INPUT -p all -s "${PEERNODEIPPREFIX}${thisNode}" -j ACCEPT
-                    echo "${PEERNODEIPPREFIX}${thisNode}    ${PEERNODEPREFIX}${thisNode}" >> /etc/hosts
+                    iptables -I INPUT -p all -s "${thisNode}" -j ACCEPT
+                    echo "${thisNode}    ${thisNode}" >> /etc/hosts
                 else
 				    echo "Node ${thisNode} is me"
-                    echo "127.0.0.1    ${PEERNODEPREFIX}${thisNode}" >> /etc/hosts
+                    echo "127.0.0.1    ${thisNode}" >> /etc/hosts
                 fi
                 let index++
             done

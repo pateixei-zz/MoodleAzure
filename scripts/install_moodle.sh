@@ -25,24 +25,32 @@
     moodleVersion=$1
     glusterNode=$2
     glusterVolume=$3 
-    moodledbapwd=$4
-    siteFQDN=$5
-    mariadbIP=$6
+    siteFQDN=$4
+    mariadbIP=$5
+    moodledbname=$6
+    moodledbuser=$7
+    moodledbpass=$8
+       adminpass=$9
 
 	echo $moodleVersion  >> /tmp/vars.txt
 	echo $glusterNode    >> /tmp/vars.txt
 	echo $glusterVolume  >> /tmp/vars.txt
-	echo $moodledbapwd   >> /tmp/vars.txt
 	echo $siteFQDN       >> /tmp/vars.txt
 	echo $mariadbIP      >> /tmp/vars.txt
+	echo $moodledbname   >> /tmp/vars.txt
+	echo $moodledbuser   >> /tmp/vars.txt
+	echo $moodledbpass   >> /tmp/vars.txt
+	echo    $adminpass   >> /tmp/vars.txt
 
     # create gluster mount point
     mkdir -p /moodle
 
     #configure gluster repository & install gluster client
-    sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y
-    sudo apt-get -y update
-    sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
+    sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y                     >> /tmp/apt1.log
+    sudo apt-get -y update                                                   >> /tmp/apt2.log
+    sudo apt-get -y --force-yes install glusterfs-client mysql-client git    >> /tmp/apt3.log
+
+
 
     # mount gluster files system
     echo -e '\n\rInstalling GlusterFS on '$glusterNode':/'$glusterVolume '/moodle\n\r' 
@@ -57,19 +65,19 @@
     # create moodledata directory
     sudo mkdir -p /moodle/moodledata
 
+     # configuring PHP 5.6 repository (NEW LINES TO ADD BEFORE THE �Install Lamp Stack� BELLOW) 
+    sudo add-apt-repository -y ppa:ondrej/php                                >> /tmp/apt4.log
+    sudo apt-get -y update                                                   >> /tmp/apt4.log
+
     # install pre-requisites
-	#sudo apt-get update
     sudo apt-get install -y --fix-missing python-software-properties unzip
 
-	#sudo apt-get update
-    sudo add-apt-repository -y ppa:ondrej/php
-    sudo apt-get -y update
-
     # install the LAMP stack
-    sudo apt-get install -y --force-yes apache2 php5.6 php5.6-cli
+    sudo apt-get -y  --force-yes install apache2                             >> /tmp/apt5a.log
+    sudo apt-get -y  --force-yes install php5.6 php5.6-cli                   >> /tmp/apt5b.log
 
     # install moodle requirements
-    sudo apt-get install -y --force-yes graphviz aspell php5.6-common php5.6-soap php5.6-mbstring php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl 
+    sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
 
     # install Moodle 
     echo '#!/bin/bash
@@ -90,7 +98,7 @@
     #fi
     ' > /tmp/setup-moodle.sh 
     sudo chmod +x /tmp/setup-moodle.sh
-    sudo /tmp/setup-moodle.sh 
+    sudo /tmp/setup-moodle.sh                  >> /tmp/apt7.log
 
     # create cron entry
     # It is scheduled for once per day. It can be changed as needed.
@@ -133,16 +141,16 @@
 
     </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
-    # php config 
-    PhpIni=/etc/php/5/apache2/php.ini
-    sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
-    sed -i "s/;opcache.use_cwd.*/opcache.use_cwd = 1/" $PhpIni
-    sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni
-    sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" $PhpIni
-    sed -i "s/;opcache.enable_file_override.*/opcache.enable_file_override = 0/" $PhpIni
-    sed -i "s/;opcache.enable.*/opcache.enable = 1/" $PhpIni
-    sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
-    sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
+   # php config 
+   PhpIni=/etc/php5/apache2/php.ini
+   sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
+   sed -i "s/;opcache.use_cwd.*/opcache.use_cwd = 1/" $PhpIni
+   sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni
+   sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" $PhpIni
+   sed -i "s/;opcache.enable_file_override.*/opcache.enable_file_override = 0/" $PhpIni
+   sed -i "s/;opcache.enable.*/opcache.enable = 1/" $PhpIni
+   sed -i "s/;opcache.memory_consumption.*/opcache.memory_consumption = 256/" $PhpIni
+   sed -i "s/;opcache.max_accelerated_files.*/opcache.max_accelerated_files = 8000/" $PhpIni
     
     sudo chown -R www-data /moodle/html/moodle
     sudo chown -R www-data /moodle/certs
@@ -151,13 +159,14 @@
     sudo chmod -R 770 /moodle/certs
     sudo chmod -R 770 /moodle/moodledata
 
+
+
    # restart Apache
-    echo  "\n\rRestarting Apache2 httpd server\n\r"
+    echo -e "\n\rRestarting Apache2 httpd server\n\r"
     sudo service apache2 restart 
-
-    echo "sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true"
     
-    sudo -u www-data php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP --dbuser=moodledba --dbpass=$moodledbapwd   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$moodledbapwd   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
+    echo -e "sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost="$mariadbIP" --dbname="$moodledbname" --dbuser="$moodledbuser" --dbpass="$moodledbpass" --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$adminpass" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
+	         sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP   --dbname=$moodledbname   --dbuser=$moodledbuser   --dbpass=$moodledbpass   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
-    echo "\n\rDone! Installation completed!\n\r"
+    echo -e "\n\rDone! Installation completed!\n\r"
 }  > /tmp/install.log

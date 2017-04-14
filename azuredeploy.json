@@ -3,17 +3,18 @@
     "contentVersion": "1.0.0.0",
 
     "parameters": {
-		"resourcesPrefix":		{ "type": "string",			"defaultValue": "bkbmoodle",		"metadata": {"description": "Prefix of storage account name, network, virtual machines, and so on"} }, 
+		"resourcesPrefix":		{ "type": "string",			"defaultValue": "abcmoodle",		"metadata": {"description": "Prefix of storage account name, network, virtual machines, and so on"} }, 
 		"vNetAddressSpace":		{ "type": "string",			"defaultValue": "172.30.0.0",		"metadata": {"description": "Address range for the Moodle virtual network - presumed /16 - further subneting during vnet creation"} }, 
-		"moodleVersion":		{ "type": "string",			"defaultValue": "MOODLE_32_STABLE", "metadata": {"description": "The Moodle version you want to install."},	"allowedValues": ["MOODLE_32_STABLE","MOODLE_31_STABLE","MOODLE_30_STABLE"] },
+		"moodleVersion":		{ "type": "string",			"defaultValue": "MOODLE_32_STABLE", "metadata": {"description": "The Moodle version you want to install."},	"allowedValues": ["MOODLE_32_STABLE","MOODLE_31_STABLE","MOODLE_30_STABLE","MOODLE_29_STABLE"] },
 		"GlusterTshirtSize":	{ "type": "string",			"defaultValue": "Small",			"metadata": {"description": "VM size for the gluster nodes"},			"allowedValues": ["Small","Medium","Large"] },
 		"MariadbTshirtSize":	{ "type": "string",			"defaultValue": "Small",			"metadata": {"description": "VM size for the mariadb nodes"},			"allowedValues": ["Small","Medium","Large"] },
+		"CntrlerTshirtSize":	{ "type": "string",			"defaultValue": "Small",			"metadata": {"description": "VM size for the single controller node"},	"allowedValues": ["Small","Medium","Large"] },
 		"adminUsername":		{ "type": "string",			"defaultValue": "azureadmin",		"metadata": {"description": "ssh user name"}},
 		"adminPassword":		{ "type": "securestring",										"metadata": {"description": "ssh password"}},
-		"mySqlUserPassword":	{ "type": "securestring",										"metadata": {"description": "my sql moodle database owner (aka 'moodledba') password"}},
-		"mySqlRootPassword":	{ "type": "securestring",										"metadata": {"description": "my sql root user password"}},
-		"applyScriptsSwitch":	{ "type": "int",			"defaultValue": 1,					"metadata": {"description": "Switch to process or bypass all scripts/extensions"}, "allowedValues": [ 1 ] },
-		 "azureBackupSwitch":	{ "type": "int",			"defaultValue": 0,					"metadata": {"description": "Switch to configure AzureBackup and enlist VM's (use '1' to enable VM's backup)"},    "allowedValues": [ 0,1 ] }
+		"mySQLuserPassword":	{ "type": "securestring",										"metadata": {"description": "my sql regular user password"}},
+		"mySQLrootPassword":	{ "type": "securestring",										"metadata": {"description": "my sql root user password"}},
+		"applyScriptsSwitch":	{ "type": "int",			"defaultValue": 0,					"metadata": {"description": "Switch to process or bypass all scripts/extensions"}, "allowedValues": [ 0,1 ] },
+		 "azureBackupSwitch":	{ "type": "int",			"defaultValue": 0,					"metadata": {"description": "Switch to configure AzureBackup and enlist VM's"},    "allowedValues": [ 0,1 ] }
 	},
 
     "variables": {
@@ -28,15 +29,17 @@
 		"Documentation08": "    webvmss           - creates a vm scale set",
 		"Documentation09": "    controller        - creates a jumpbox and deploys code",
 
-		"Documentation10": "Three sizing parameters are provided, one each for the gluster system, the mariadb system; jumpbox vm will always be small",
-		"Documentation11": "    1 -  50 users - use  Small,  Small",
-		"Documentation12": "   51 - 150 users - use  Small, Medium",
-		"Documentation13": "  151 - 250 users - use Medium, Medium",
-		"Documentation14": "     >  250 users - use  Large,  Large",
+		"Documentation10": "Three sizing parameters are provided, one each for the gluster system, the mariadb system and one for the jumpbox",
+		"Documentation11": "    1 -  50 users - use  Small,  Small, Small",
+		"Documentation12": "   51 - 150 users - use  Small, Medium, Small",
+		"Documentation13": "  151 - 250 users - use Medium, Medium, Small",
+		"Documentation14": "     >  250 users - use  Large,  Large, Small",
 		"Documentation15": "    ",
 		"Documentation16": "    ",
 		"Documentation17": "    ",
 		"Documentation18": "    ",
+
+
 
 		"octets": "[split(parameters('vNetAddressSpace'), '.')]",
 
@@ -59,15 +62,16 @@
 			"vNetAddressSpace":		"[parameters('vNetAddressSpace')]",
 			"SubnetWebRange":		"[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),0)), '.0/24' ) ]",	"SubnetWebPrefix": "[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),0))) ]",
 			"SubnetSanRange":		"[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),1)), '.0/24' ) ]",	"SubnetSanPrefix": "[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),1))) ]",
-			"SubnetMdbRange":		"[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),2)), '.0/24' ) ]",	"SubnetMdbPrefix": "[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),2))) ]",
+			"SubnetMdbRange":		"[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),2)), '.0/24' ) ]",	"SubnetMdbPrefix": "[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),2))) ]",	"StaticIpMariaDb": "[concat( variables('octets')[0], '.', variables('octets')[1], '.', string(add(int(variables('octets')[2]),2)),'.250') ]",
 			
 			"moodleVersion":		"[parameters('moodleVersion')]",
 			"GlusterTshirtSize":	"[parameters('GlusterTshirtSize')]",
 			"MariadbTshirtSize":	"[parameters('MariadbTshirtSize')]",
+			"CntrlerTshirtSize":	"[parameters('CntrlerTshirtSize')]",
 			"adminUsername":		"[parameters('adminUsername')]",
 			"adminPassword":		"[parameters('adminPassword')]",
-			"mySqlUserPassword":	"[parameters('mySqlUserPassword')]",
-			"mySqlRootPassword":	"[parameters('mySqlRootPassword')]",
+			"mySQLuserPassword":	"[parameters('mySQLuserPassword')]",
+			"mySQLrootPassword":	"[parameters('mySQLrootPassword')]",
 			"applyScriptsSwitch":	"[parameters('applyScriptsSwitch')]",
 			 "azureBackupSwitch":	"[parameters( 'azureBackupSwitch')]",
 
@@ -84,12 +88,16 @@
 			"lbPipName":				"[concat(  'lb-',variables('rpfx'),'-ip')]",
 			"lbDnsName":				"[concat(  'lb-',variables('rpfx'))]",
 
-			"gfxAvailabilitySetName":	"[concat(  'gfs',variables('rpfx'),'-as')]",
-			"gfsNameRoot":				"[concat(  'gfs',variables('rpfx'),'vm')]",
+			"gfxAvailabilitySetName":	"[concat( 'gfs-',variables('rpfx'),'-as')]",
+			"gfsNameRoot":				"[concat( 'gfs' ,variables('rpfx'), 'vm')]",
 
-			"dbAvailabilitySetName":	"[concat(   'db',variables('rpfx'),'-as')]",
-			"dbLoadBalancerName":		"[concat(   'db',variables('rpfx'),'-lb')]",
-			"dbNameRoot":				"[concat(   'db',variables('rpfx'),'vm')]",
+			"dbAvailabilitySetName":	"[concat(  'db-',variables('rpfx'),'-as')]",
+			"dbNameRoot":				"[concat(  'db' ,variables('rpfx'),  'vm')]",
+			"dbLoadBalancerName":		"[concat(  'db-',variables('rpfx'),'-lb')]",
+				"dbFeName":				"[concat(  'db-',variables('rpfx'),'-FE')]",
+				"dbBeName":				"[concat(  'db-',variables('rpfx'),'-BE')]",
+				"dbProbe":				"[concat(  'db-',variables('rpfx'),'-Probe')]",	
+//				"dbNatPool":			"[concat(  'db-',variables('rpfx'),'-NatPool')]",
 
 			"jboxPipName":				"[concat('jbox',variables('rpfx'))]",
 			"jboxNicName":				"[concat('jbox',variables('rpfx'),'vm-nic')]",

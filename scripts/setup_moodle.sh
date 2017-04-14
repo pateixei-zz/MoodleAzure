@@ -35,17 +35,20 @@ echo $glusterVolume  >> /tmp/vars.txt
 sudo apt-get -y install python-software-properties
 
 #configure gluster repository & install gluster client
-sudo add-apt-repository -y ppa:gluster/glusterfs-3.8
-sudo add-apt-repository -y ppa:ondrej/php
+sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y                     >> /tmp/apt1.log
+sudo apt-get -y update                                                   >> /tmp/apt2.log
+sudo apt-get -y --force-yes install glusterfs-client mysql-client git    >> /tmp/apt3.log
 
-sudo apt-get -y update
-sudo apt-get -y --force-yes install glusterfs-client mysql-client git 
+# configuring PHP 5.6 repository (NEW LINES TO ADD BEFORE THE �Install Lamp Stack� BELLOW) 
+sudo add-apt-repository -y ppa:ondrej/php                               >> /tmp/apt4.log
+sudo apt-get -y update                                                  >> /tmp/apt4.log
 
 # install the LAMP stack
-sudo apt-get -y --force-yes install apache2 php5.6 
+sudo apt-get -y --force-yes install apache2                             >> /tmp/apt5a.log
+sudo apt-get -y --force-yes install php5.6 php5.6-cli                   >> /tmp/apt5b.log
 
 # install moodle requirements
-sudo apt-get install -y --force-yes graphviz aspell php5.6-common php5.6-soap php5.6-mbstring php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl 
+sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl   >> /tmp/apt6.log
 
 # create gluster mount point
 sudo mkdir -p /moodle
@@ -95,9 +98,9 @@ echo -e '
 </VirtualHost>' > /etc/apache2/sites-enabled/000-default.conf
 
 # php config 
-PhpIni=/etc/php/5/apache2/php.ini
+PhpIni=/etc/php5/apache2/php.ini
 sed -i "s/memory_limit.*/memory_limit = 512M/" $PhpIni
-sed -i "s/;opcache.use_cwd.*1/opcache.use_cwd = 1/" $PhpIni
+sed -i "s/;opcache.use_cwd.*/opcache.use_cwd = 1/" $PhpIni
 sed -i "s/;opcache.validate_timestamps.*/opcache.validate_timestamps = 1/" $PhpIni
 sed -i "s/;opcache.save_comments.*/opcache.save_comments = 1/" $PhpIni
 sed -i "s/;opcache.enable_file_override.*/opcache.enable_file_override = 0/" $PhpIni

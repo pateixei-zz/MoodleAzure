@@ -4,7 +4,8 @@
 
 	"parameters": {
 		"moodleCommon":	{ "type": "object", "metadata": { "description": "Common Moodle values" } }, 
-		"counter":		{ "type": "int",    "metadata": { "description": "from the copyindex function of calling template" } }
+		"counter":		{ "type": "int",    "metadata": { "description": "from the copyindex function of calling template" } },
+		"vmNameList":	{ "type": "string",	"metadata": { "description": "list of all names in the Maria DB cluster" } }
 	},
 
 	"variables": {
@@ -30,6 +31,9 @@
 		"SubnetMdbRef":	"[concat(resourceId('Microsoft.Network/virtualNetworks',   parameters('moodleCommon').vnetName),'/subnets/',parameters('moodleCommon').SubnetMdb)]",
 			   "asRef":	"[       resourceId('Microsoft.Compute/availabilitySets',  parameters('moodleCommon').dbAvailabilitySetName)]",
 			  "nicRef":	"[       resourceId('Microsoft.Network/networkInterfaces', variables('nicName') )]",
+		"feID":			"[concat(resourceId('Microsoft.Network/loadBalancers',parameters('moodleCommon').dbLoadBalancerName),'/frontendIPConfigurations/', parameters('moodleCommon').dbFeName)]",
+		"beID":			"[concat(resourceId('Microsoft.Network/loadBalancers',parameters('moodleCommon').dbLoadBalancerName),'/backendAddressPools/',      parameters('moodleCommon').dbBeName)]",
+		"PRID":			"[concat(resourceId('Microsoft.Network/loadBalancers',parameters('moodleCommon').dbLoadBalancerName),'/probes/',                   parameters('moodleCommon').dbProbe)]",
 		
 		  "vmName":		"[concat(parameters('moodleCommon').dbNameRoot,parameters('counter'))]",
 		 "nicName":		"[concat(variables('vmName'),'-nic')]",
@@ -51,7 +55,7 @@
 			
 			"tags":			{ "displayName": "MariaDb VM NIC" },
 			
-			"properties":	{ "ipConfigurations": [ { "name": "ipcfgdb", "properties": { "privateIPAllocationMethod": "Dynamic", "subnet": { "id": "[variables('SubnetMdbRef')]" } } } ] }
+			"properties":	{ "ipConfigurations": [ { "name": "ipcfgdb", "properties": { "privateIPAllocationMethod": "Dynamic", "subnet": { "id": "[variables('SubnetMdbRef')]" }, "loadBalancerBackendAddressPools": [ { "id": "[variables('beID')]" } ] } } ] }
 		},
 
 
@@ -103,8 +107,9 @@
 				"mode":			"Incremental",
 				"templateLink":	{ "uri":          "[concat(    parameters('moodleCommon').baseTemplateUrl,'mariadbvmconfig',parameters('moodleCommon').applyScriptsSwitch,'.json')]" },
 				"parameters":	{ "moodleCommon": { "value": "[parameters('moodleCommon')]"		}, 
+								  "vmNameList":	  { "value": "[parameters('vmNameList')]"		},
 								  "vmName":		  { "value": "[ variables('vmName')]"			},
-								  "vmNumber":	  { "value": "[sub(parameters('counter'),1)]"	} 
+								  "vmNumber":	  { "value": "[parameters('counter')]"			} 
 
 				}
 			}
