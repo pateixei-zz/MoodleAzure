@@ -51,10 +51,10 @@
 
 			"api4Compute":  	"2016-04-30-preview",
 
-			      "mariadbScriptFileName": "install_mariadb.sh", "mariadbVmCount": 2, 
-			      "glusterScriptFileName": "install_gluster.sh", "glusterVmCount": 2,
+			"mariadbScriptFileName"		 : "install_mariadb.sh", "mariadbVmCount": 2, 
+			"glusterScriptFileName"		 : "install_gluster.sh", "glusterVmCount": 2,
 			"moodleInstallScriptFileName": "install_moodle.sh",
-			  "moodleSetupScriptFileName":   "setup_moodle.sh",
+			"moodleSetupScriptFileName"	 :   "setup_moodle.sh",
 
 			"osType": { "publisher": "Canonical", "offer": "UbuntuServer", "sku": "14.04.4-LTS", "version": "latest" },
 
