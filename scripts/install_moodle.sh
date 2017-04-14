@@ -74,10 +74,20 @@
 
     # install the LAMP stack
     sudo apt-get -y  --force-yes install apache2                             >> /tmp/apt5a.log
-    sudo apt-get -y  --force-yes install php5.6 php5.6-cli                   >> /tmp/apt5b.log
+    sudo apt-get -y  --force-yes install php5.6 php5.6-cli php5.6-curl php5.6-zip >> /tmp/apt5b.log
 
     # install moodle requirements
+    sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
+    sudo add-apt-repository 'deb http://mirror.edatel.net.co/mariadb/repo/10.1/ubuntu trusty main'
+
     sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
+    sudo apt-get installl -y mariadb-client php5.6-mysqli
+
+apt-get update > /dev/null
+
+echo "Installing MariaDB Custer for $NODEINDX of $NODECOUNT on $DISTRO $REL ..."
+
+DEBIAN_FRONTEND=noninteractive apt-get install -y rsync mariadb-server
 
     # install Moodle 
     echo '#!/bin/bash
