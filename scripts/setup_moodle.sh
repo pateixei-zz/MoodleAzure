@@ -53,9 +53,14 @@ sudo add-apt-repository 'deb http://mirror.edatel.net.co/mariadb/repo/10.1/ubunt
 sudo apt-get -y update > /dev/null
 
 sudo apt-get install -y mariadb-client
+<<<<<<< HEAD
 sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath \ 
                         php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 \
                         php5.6-redis php5.6-curl php5.6-mysql       >> /tmp/apt6.log
+=======
+sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
+sudo apt-get install -y php5.6-xml php5.6-mysql
+>>>>>>> 079f58b9833bf325e16d88cb8e37d7c17735bd47
 
 # create gluster mount point
 sudo mkdir -p /moodle
