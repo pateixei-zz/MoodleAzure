@@ -17,7 +17,7 @@
 
 		"dns":			"[concat(parameters('moodleCommon').lbDnsName,'.',resourceGroup().location,'.cloudapp.azure.com')]",
 		"scriptUri":	"[concat(parameters('moodleCommon').ScriptLocation,parameters('moodleCommon').moodleInstallScriptFileName)]",
-		"cmdExec":		"[concat('sh ',                                    parameters('moodleCommon').moodleInstallScriptFileName, ' ', parameters('moodleCommon').moodleVersion, ' ', concat(parameters('moodleCommon').gfsNameRoot, '0'), ' ', 'data', ' ', variables('dns'), ' ', parameters('moodleCommon').StaticIpMariaDb, ' ', 'moodledb', ' ', 'moodleuser', ' ', parameters('moodleCommon').mySQLuserPassword,' ', parameters('moodleCommon').adminPassword)]"
+		"cmdExec":		"[concat('sh ',                                    parameters('moodleCommon').moodleInstallScriptFileName, ' ', parameters('moodleCommon').moodleVersion, ' ', concat(parameters('moodleCommon').gfsNameRoot, '0'), ' ', 'data', ' ', variables('dns'), ' ', parameters('moodleCommon').StaticIpMariaDb, ' ', 'moodle', ' ', 'moodledba', ' ', parameters('moodleCommon').mySQLuserPassword,' ', parameters('moodleCommon').adminPassword)]"
 	},
 
 	"resources": [
