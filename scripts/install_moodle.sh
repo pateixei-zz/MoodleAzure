@@ -80,10 +80,10 @@
     sudo apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xcbcb082a1bb943db
     sudo add-apt-repository 'deb http://mirror.edatel.net.co/mariadb/repo/10.1/ubuntu trusty main'
 
-    apt-get update > /dev/null
+    apt-get -y update > /dev/null
 
     sudo apt-get install -y graphviz aspell php5.6-common php5.6-soap php5.6-json php5.6-zip php5.6-bcmath php5.6-gd php5.6-mysql php5.6-xmlrpc php5.6-intl php5.6-xml php5.6-bz2 php5.6-redis php5.6-curl        >> /tmp/apt6.log
-    sudo apt-get install -y mariadb-client php5.6-mysqli
+    sudo apt-get install -y mariadb-client php5.6-mysql
 
 
 
