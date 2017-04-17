@@ -173,7 +173,7 @@
     sudo service apache2 restart 
     
     echo -e "sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost="$mariadbIP" --dbname="$moodledbname" --dbuser="$moodledbuser" --dbpass="$moodledbpass" --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$adminpass" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
-	         sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=pt_br --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP   --dbname=$moodledbname   --dbuser=$moodledbuser   --dbpass=$moodledbpass   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
+	         sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mariadbIP   --dbname=$moodledbname   --dbuser=$moodledbuser   --dbpass=$moodledbpass   --dbtype=mariadb --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
     echo -e "\n\rDone! Installation completed!\n\r"
 }  > /tmp/install.log
