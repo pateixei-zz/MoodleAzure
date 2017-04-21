@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Moodle LMS on Azure IaaS",
+  "description": "This template deploys a scalable architecture for running Moodle Learning Management System on top of Azure IaaS VMs. It creates a VMScaleSet (Ubuntu Linux 14.04) running Apache+PHP 5.6 for running the Application. Its also deploys a MariaDb 10.1 Active-Active cluster (Galera) for the database and a GlusterFS cluster for hosting the MOODLEDATA folder shared accross all the nodes of the VMSS. Azure Backup can be enable in the relevant VMs. Moodle version can be selected for installation.",
+  "summary": "Scalable architecture for Moodle running in Azure VM/VMSS",
+  "githubUsername": "pateixei",
+  "dateUpdated": "2017-04-20"
+}
