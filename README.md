@@ -6,8 +6,6 @@ Moodle deployment using Azure Resource Manager Template
 [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fpateixei%2FMoodleAzure%2Fv2%2Fazuredeploy.json)
 
 
-=" 
-
 This Azure Resource Manager template creates a clustered moodle environment. 
 
 The following resources will be created:
