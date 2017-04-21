@@ -46,7 +46,7 @@
 		"rpfx": "[tolower(parameters('resourcesPrefix'))]",
 
 		"moodleCommon": {
-			"baseTemplateUrl": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/templates/",
+			"baseTemplateUrl": "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/nested/",
 			"scriptLocation":  "https://raw.githubusercontent.com/pateixei/MoodleAzure/v2/scripts/",
 
 			"api4Compute":  	"2016-04-30-preview",
