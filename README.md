@@ -3,6 +3,11 @@ Moodle deployment using Azure Resource Manager Template
 
 [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fpateixei%2FMoodleAzure%2Fv2%2Fazuredeploy.json)
 
+[![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fpateixei%2FMoodleAzure%2Fv2%2Fazuredeploy.json)
+
+
+=" 
+
 This Azure Resource Manager template creates a clustered moodle environment. 
 
 The following resources will be created:
@@ -15,6 +20,9 @@ The following resources will be created:
 - a virtual machine used as a JumpBox for the environment, acessible via SSH and http
 - a redis cache to be used for Moodle Session Cache (manual setup required in Moodle)
 - a lot of underlying resources need for the environment (virtual network, storage accounts, etc)
+
+![Moodle On Azure](/images/moodle-on-azure.jpg)
+Format: ![Moodle on Azure IaaS - Architecture]
 
 The setup script will ask you about the 't-shirt size' for database & gluster layers.
 Here's an explanation for each one of these: 
