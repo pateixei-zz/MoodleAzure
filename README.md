@@ -56,19 +56,19 @@ Here's an explanation for each one of these:
 
 Gluster t-shirt sizes: 
 
-		tshirt | VM Size         | Disk Count | Disk Size | Total Size
-		-------|-----------------|------------|-----------|------------
-		Small  | Standard_DS2_v2 |  4         |  127 Gb   | 512 Gb
-		Medium | Standard_DS3_v2 |  2         |  512 Gb   | 1 Tb
-		Large  | Standard_DS4_v2 |  2         | 1023 Gb   | 2 Tb
+tshirt | VM Size         | Disk Count | Disk Size | Total Size
+-------|-----------------|------------|-----------|------------
+Small  | Standard_DS2_v2 |  4         |  127 Gb   | 512 Gb
+Medium | Standard_DS3_v2 |  2         |  512 Gb   | 1 Tb
+Large  | Standard_DS4_v2 |  2         | 1023 Gb   | 2 Tb
 
 MariaDb t-shirt sizes: 
 
-		tshirt | VM Size         | Disk Count | Disk Size | Total Size
-		-------|-----------------|------------|-----------|------------
-		Small  | Standard_DS2_v2 |  2         |  127 Gb   | 256 Gb
-		Medium | Standard_DS3_v2 |  2         |  512 Gb   | 1 Tb
-		Large  | Standard_DS4_v2 |  2         | 1023 Gb   | 2 Tb
+tshirt | VM Size         | Disk Count | Disk Size | Total Size
+-------|-----------------|------------|-----------|------------
+Small  | Standard_DS2_v2 |  2         |  127 Gb   | 256 Gb
+Medium | Standard_DS3_v2 |  2         |  512 Gb   | 1 Tb
+Large  | Standard_DS4_v2 |  2         | 1023 Gb   | 2 Tb
 
 There's no default rule or recommendation in order to decide which tier use for your deployment. 
 However, as an initial guidance, remember that: 
