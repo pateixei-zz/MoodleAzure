@@ -6,7 +6,7 @@ High available, high scalable Moodle deployment using Azure Resource Manager Tem
 This Azure Resource Manager template creates a clustered, multi-layered moodle environment. 
 With this template we have three main components being deployed: 
 - a web application layer with VMSS and auto-scale enabled
-- a database layer composed of a MariaDb Galera cluster 
+- a database layer composed of a MariaDb Galera cluster    
 - a shared filesystem layer, for the "moodledata" content.
 
 Main differences from other existing Moodle templates:
